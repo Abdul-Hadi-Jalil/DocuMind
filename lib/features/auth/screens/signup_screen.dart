@@ -1,3 +1,4 @@
+import 'package:documind/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -5,41 +6,42 @@ import 'package:fluttertoast/fluttertoast.dart';
 import '../../../widgets/custom_text_field.dart';
 import '../../../widgets/custom_button.dart';
 import '../providers/auth_provider.dart';
-import 'signup_screen.dart';
+import 'login_screen.dart';
 import '../../dashboard/screens/dashboard_screen.dart';
 
-class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+class SignUpScreen extends StatefulWidget {
+  const SignUpScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  State<SignUpScreen> createState() => _SignUpScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _SignUpScreenState extends State<SignUpScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    // Clear any previous errors when screen loads
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<AuthProvider>(context, listen: false).clearError();
     });
   }
 
-  void _login() async {
+  void _signUp() async {
     if (_formKey.currentState!.validate()) {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      await authProvider.login(
+      await authProvider.signUp(
         _emailController.text.trim(),
         _passwordController.text.trim(),
+        _confirmPasswordController.text.trim(),
       );
 
       if (authProvider.isAuthenticated) {
         Fluttertoast.showToast(
-          msg: "Login successful!",
+          msg: "Account created successfully!",
           toastLength: Toast.LENGTH_SHORT,
           gravity: ToastGravity.BOTTOM,
           backgroundColor: AppTheme.primaryGreen,
@@ -68,6 +70,15 @@ class _LoginScreenState extends State<LoginScreen> {
 
     return Scaffold(
       backgroundColor: AppTheme.background,
+      appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: AppTheme.white),
+          onPressed: authProvider.isLoading
+              ? null
+              : () => Navigator.pop(context),
+        ),
+        title: const Text('Create Account'),
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
@@ -75,27 +86,24 @@ class _LoginScreenState extends State<LoginScreen> {
             key: _formKey,
             child: Column(
               children: [
-                const SizedBox(height: 40),
-                // Logo/Header
+                const SizedBox(height: 20),
+                // Header
                 Container(
-                  width: 120,
-                  height: 120,
+                  width: 80,
+                  height: 80,
                   decoration: BoxDecoration(
                     color: AppTheme.primaryGreen,
                     shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppTheme.primaryGreen.withOpacity(0.3),
-                        blurRadius: 10,
-                        offset: const Offset(0, 5),
-                      ),
-                    ],
                   ),
-                  child: const Icon(Icons.eco, color: AppTheme.white, size: 60),
+                  child: const Icon(
+                    Icons.person_add,
+                    color: AppTheme.white,
+                    size: 40,
+                  ),
                 ),
                 const SizedBox(height: 20),
                 const Text(
-                  'Welcome to FrogBase AI',
+                  'Join FrogBase AI',
                   style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
@@ -104,7 +112,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Sign in to continue your AI journey',
+                  'Create your account to get started',
                   style: TextStyle(fontSize: 16, color: AppTheme.grey),
                 ),
                 const SizedBox(height: 40),
@@ -141,20 +149,36 @@ class _LoginScreenState extends State<LoginScreen> {
                     return null;
                   },
                 ),
+                const SizedBox(height: 20),
+                // Confirm Password Field
+                CustomTextField(
+                  label: 'Confirm Password',
+                  obscureText: true,
+                  controller: _confirmPasswordController,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please confirm your password';
+                    }
+                    if (value != _passwordController.text) {
+                      return 'Passwords do not match';
+                    }
+                    return null;
+                  },
+                ),
                 const SizedBox(height: 30),
-                // Login Button
+                // Sign Up Button
                 CustomButton(
-                  text: 'Sign In',
-                  onPressed: _login,
+                  text: 'Create Account',
+                  onPressed: _signUp,
                   isLoading: authProvider.isLoading,
                 ),
                 const SizedBox(height: 20),
-                // Sign Up Link
+                // Login Link
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      "Don't have an account?",
+                      "Already have an account?",
                       style: TextStyle(color: AppTheme.grey),
                     ),
                     const SizedBox(width: 8),
@@ -162,15 +186,15 @@ class _LoginScreenState extends State<LoginScreen> {
                       onTap: authProvider.isLoading
                           ? null
                           : () {
-                              Navigator.push(
+                              Navigator.pushReplacement(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => const SignUpScreen(),
+                                  builder: (context) => const LoginScreen(),
                                 ),
                               );
                             },
                       child: Text(
-                        'Sign Up',
+                        'Sign In',
                         style: TextStyle(
                           color: AppTheme.primaryGreen,
                           fontWeight: FontWeight.bold,
@@ -192,6 +216,7 @@ class _LoginScreenState extends State<LoginScreen> {
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
+    _confirmPasswordController.dispose();
     super.dispose();
   }
 }
