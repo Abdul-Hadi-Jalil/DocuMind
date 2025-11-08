@@ -1,4 +1,5 @@
 import 'package:documind/features/dashboard/data_module_data.dart';
+import 'package:documind/features/pdf_chat/screens/pdf_chat_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:responsive_framework/responsive_framework.dart';
@@ -198,13 +199,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   void _navigateToModule(String route) {
-    // TODO: Implement navigation to specific modules
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Navigating to $route - To be implemented'),
-        backgroundColor: AppTheme.primaryGreen,
-      ),
-    );
+    if (route == '/pdf-chat') {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const PdfChatScreen()),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Navigating to $route - To be implemented'),
+          backgroundColor: AppTheme.primaryGreen,
+        ),
+      );
+    }
   }
 
   void _logout() {
