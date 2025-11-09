@@ -1,3 +1,4 @@
+import 'package:documind/features/ocr/provider/ocr_provider.dart';
 import 'package:documind/features/pdf_chat/providers/pdf_chat_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -21,6 +22,7 @@ class MyApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => DashboardProvider()),
+        ChangeNotifierProvider(create: (_) => OcrProvider()),
         ChangeNotifierProvider(create: (_) => PdfChatProvider()),
       ],
       child: MaterialApp(
