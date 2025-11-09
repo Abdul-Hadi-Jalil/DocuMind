@@ -1,4 +1,5 @@
 import 'package:documind/features/dashboard/data_module_data.dart';
+import 'package:documind/features/image_generation/screens/image_generation_screen.dart';
 import 'package:documind/features/ocr/screen_ocr_screen.dart';
 import 'package:documind/features/pdf_chat/screens/pdf_chat_screen.dart';
 import 'package:flutter/material.dart';
@@ -209,6 +210,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
       Navigator.push(
         context,
         MaterialPageRoute(builder: (context) => const OcrScreen()),
+      );
+    } else if (route == '/image-generation') {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const ImageGenerationScreen()),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(

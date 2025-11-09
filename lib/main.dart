@@ -1,3 +1,4 @@
+import 'package:documind/features/image_generation/providers/image_generation_provider.dart';
 import 'package:documind/features/ocr/provider/ocr_provider.dart';
 import 'package:documind/features/pdf_chat/providers/pdf_chat_providers.dart';
 import 'package:flutter/material.dart';
@@ -24,6 +25,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => DashboardProvider()),
         ChangeNotifierProvider(create: (_) => OcrProvider()),
         ChangeNotifierProvider(create: (_) => PdfChatProvider()),
+        ChangeNotifierProvider(create: (_) => ImageGenerationProvider()),
       ],
       child: MaterialApp(
         title: 'DocuMind AI',
