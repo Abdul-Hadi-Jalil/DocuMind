@@ -28,13 +28,5 @@ class ModuleData {
       color: const Color(0xFF9C27B0), // Purple
       route: '/image-generation',
     ),
-    Module(
-      id: '4',
-      title: 'Text to Speech',
-      description: 'Convert written text into natural sounding speech',
-      icon: '🔊',
-      color: const Color(0xFFFF9800), // Orange
-      route: '/text-to-speech',
-    ),
   ];
 }

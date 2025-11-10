@@ -4,8 +4,6 @@ import 'package:documind/features/ocr/screen_ocr_screen.dart';
 import 'package:documind/features/pdf_chat/screens/pdf_chat_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:responsive_framework/responsive_framework.dart';
-
 import '../../../core/theme/app_theme.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../widgets/module_card.dart';
@@ -19,13 +17,16 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
+  // Fixed card dimensions
+  static const double _cardWidth = 280;
+  static const double _cardHeight = 270;
+  static const double _cardSpacing = 24;
+
   @override
   Widget build(BuildContext context) {
-    final isDesktop = ResponsiveBreakpoints.of(context).largerThan(TABLET);
-
     return Scaffold(
       backgroundColor: AppTheme.background,
-      body: isDesktop ? _buildWebLayout() : _buildMobileLayout(),
+      body: _buildWebLayout(),
     );
   }
 
@@ -35,167 +36,133 @@ class _DashboardScreenState extends State<DashboardScreen> {
         // Sidebar
         const WebSidebar(),
         // Main Content
-        Expanded(child: _buildDashboardContent(isWeb: true)),
+        Expanded(child: _buildDashboardContent()),
       ],
     );
   }
 
-  Widget _buildMobileLayout() {
-    return _buildDashboardContent(isWeb: false);
-  }
-
-  Widget _buildDashboardContent({bool isWeb = false}) {
+  Widget _buildDashboardContent() {
     final authProvider = Provider.of<AuthProvider>(context);
 
-    return CustomScrollView(
-      slivers: [
-        // App Bar for mobile, Header for web
-        if (!isWeb) _buildMobileAppBar(),
-        if (isWeb) _buildWebHeader(),
+    return SingleChildScrollView(
+      child: Column(
+        children: [
+          // Web Header
+          _buildWebHeader(),
 
-        // Welcome Section
-        SliverToBoxAdapter(
-          child: Container(
-            padding: isWeb
-                ? const EdgeInsets.symmetric(horizontal: 40, vertical: 32)
-                : const EdgeInsets.all(24),
+          // Welcome Section
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 32),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   'Welcome back, ${authProvider.userEmail?.split('@').first ?? 'User'}! 👋',
-                  style: TextStyle(
-                    fontSize: isWeb ? 32 : 24,
+                  style: const TextStyle(
+                    fontSize: 32,
                     fontWeight: FontWeight.bold,
-                    color: AppTheme.black,
+                    color: AppTheme.white,
                   ),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   'Choose an AI module to get started with your creative journey',
-                  style: TextStyle(
-                    fontSize: isWeb ? 18 : 16,
-                    color: AppTheme.grey,
-                  ),
+                  style: TextStyle(fontSize: 18, color: AppTheme.grey),
                 ),
               ],
             ),
           ),
-        ),
 
-        // Modules Grid
-        SliverPadding(
-          padding: isWeb
-              ? const EdgeInsets.symmetric(horizontal: 40, vertical: 20)
-              : const EdgeInsets.all(24),
-          sliver: SliverGrid(
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: isWeb ? _getWebGridCount(context) : 2,
-              crossAxisSpacing: isWeb ? 24 : 16,
-              mainAxisSpacing: isWeb ? 24 : 16,
-              childAspectRatio: isWeb ? 1.2 : 0.9,
+          // Fixed Grid Container
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 40),
+            child: Wrap(
+              spacing: _cardSpacing,
+              runSpacing: _cardSpacing,
+              children: ModuleData.modules.map((module) {
+                return SizedBox(
+                  width: _cardWidth,
+                  height: _cardHeight,
+                  child: ModuleCard(
+                    module: module,
+                    onTap: () => _navigateToModule(module.route),
+                    isWebLayout: true,
+                  ),
+                );
+              }).toList(),
             ),
-            delegate: SliverChildBuilderDelegate((context, index) {
-              final module = ModuleData.modules[index];
-              return ModuleCard(
-                module: module,
-                onTap: () => _navigateToModule(module.route),
-                isWebLayout: isWeb,
-              );
-            }, childCount: ModuleData.modules.length),
           ),
-        ),
 
-        // Footer spacing
-        const SliverToBoxAdapter(child: SizedBox(height: 40)),
-      ],
-    );
-  }
-
-  int _getWebGridCount(BuildContext context) {
-    final width = MediaQuery.of(context).size.width;
-    if (width > 1400) return 4;
-    if (width > 1000) return 3;
-    if (width > 700) return 2;
-    return 1;
-  }
-
-  SliverAppBar _buildMobileAppBar() {
-    return SliverAppBar(
-      backgroundColor: AppTheme.primaryGreen,
-      foregroundColor: AppTheme.white,
-      title: const Text('FrogBase AI'),
-      floating: true,
-      snap: true,
-      actions: [IconButton(icon: const Icon(Icons.logout), onPressed: _logout)],
+          // Footer spacing
+          const SizedBox(height: 40),
+        ],
+      ),
     );
   }
 
   Widget _buildWebHeader() {
-    return SliverToBoxAdapter(
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
-        decoration: BoxDecoration(
-          color: AppTheme.white,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 4,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            // User info
-            Row(
-              children: [
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: const BoxDecoration(
-                    color: AppTheme.primaryGreen,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.person,
-                    color: AppTheme.white,
-                    size: 20,
-                  ),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
+      decoration: BoxDecoration(
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          // User info
+          Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: const BoxDecoration(
+                  color: AppTheme.primaryGreen,
+                  shape: BoxShape.circle,
                 ),
-                const SizedBox(width: 12),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Welcome!',
-                      style: TextStyle(fontSize: 12, color: AppTheme.grey),
-                    ),
-                    Consumer<AuthProvider>(
-                      builder: (context, authProvider, child) {
-                        return Text(
-                          authProvider.userEmail?.split('@').first ?? 'User',
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: AppTheme.black,
-                          ),
-                        );
-                      },
-                    ),
-                  ],
+                child: const Icon(
+                  Icons.person,
+                  color: AppTheme.white,
+                  size: 20,
                 ),
-              ],
-            ),
-            const SizedBox(width: 20),
-            // Logout button
-            IconButton(
-              icon: const Icon(Icons.logout, color: AppTheme.grey),
-              onPressed: _logout,
-              tooltip: 'Logout',
-            ),
-          ],
-        ),
+              ),
+              const SizedBox(width: 12),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Welcome!',
+                    style: TextStyle(fontSize: 12, color: AppTheme.grey),
+                  ),
+                  Consumer<AuthProvider>(
+                    builder: (context, authProvider, child) {
+                      return Text(
+                        authProvider.userEmail?.split('@').first ?? 'User',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: AppTheme.white,
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(width: 20),
+          // Logout button
+          IconButton(
+            icon: const Icon(Icons.logout, color: AppTheme.grey),
+            onPressed: _logout,
+            tooltip: 'Logout',
+          ),
+        ],
       ),
     );
   }
@@ -215,13 +182,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
       Navigator.push(
         context,
         MaterialPageRoute(builder: (context) => const ImageGenerationScreen()),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Navigating to $route - To be implemented'),
-          backgroundColor: AppTheme.primaryGreen,
-        ),
       );
     }
   }

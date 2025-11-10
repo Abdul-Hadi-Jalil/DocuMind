@@ -1,11 +1,8 @@
 import 'package:documind/core/theme/app_theme.dart';
-import 'package:documind/features/ocr/models/ocr_result.dart';
 import 'package:documind/features/ocr/provider/ocr_provider.dart';
 import 'package:documind/widgets/custom_button.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'image_preview_widget.dart';
 
 class OcrResultsWidget extends StatelessWidget {
   final bool isWeb;
@@ -74,19 +71,6 @@ class OcrResultsWidget extends StatelessWidget {
               ],
             ),
           ),
-          if (provider.currentResult != null) ...[
-            IconButton(
-              icon: const Icon(Icons.image, size: 20),
-              onPressed: () =>
-                  _showImagePreview(provider.currentResult!, context),
-              tooltip: 'Preview Image',
-            ),
-            IconButton(
-              icon: const Icon(Icons.copy, size: 20),
-              onPressed: () => _copyToClipboard(provider.editedText, context),
-              tooltip: 'Copy All Text',
-            ),
-          ],
         ],
       ),
     );
@@ -115,7 +99,7 @@ class OcrResultsWidget extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'Select an image from history or process a new one',
+              'Upload an image to extract text',
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: isWeb ? 14 : 12, color: AppTheme.grey),
             ),
@@ -131,22 +115,6 @@ class OcrResultsWidget extends StatelessWidget {
 
     return Column(
       children: [
-        // Image Info and Stats
-        Container(
-          padding: const EdgeInsets.all(16),
-          color: Colors.grey[50],
-          child: Row(
-            children: [
-              _buildInfoItem(
-                'Confidence',
-                '${(result.confidence * 100).toStringAsFixed(1)}%',
-              ),
-              _buildInfoItem('Language', result.language),
-              _buildInfoItem('Dimensions', result.imageInfo.dimensions),
-              _buildInfoItem('Size', result.imageInfo.formattedSize),
-            ],
-          ),
-        ),
         // Text Editor
         Expanded(
           child: Padding(
@@ -210,28 +178,13 @@ class OcrResultsWidget extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 16),
-                // Action Buttons
-                Row(
-                  children: [
-                    Expanded(
-                      child: CustomButton(
-                        text: 'Save Changes',
-                        onPressed: provider.editedText != result.extractedText
-                            ? provider.saveEditedText
-                            : null,
-                        isLoading: provider.isProcessing,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: CustomButton(
-                        text: 'Copy Text',
-                        onPressed: () =>
-                            _copyToClipboard(provider.editedText, context),
-                        backgroundColor: Colors.blue,
-                      ),
-                    ),
-                  ],
+                // Action Button
+                CustomButton(
+                  text: 'Save Changes',
+                  onPressed: provider.editedText != result.extractedText
+                      ? provider.saveEditedText
+                      : null,
+                  isLoading: provider.isProcessing,
                 ),
               ],
             ),
@@ -239,70 +192,5 @@ class OcrResultsWidget extends StatelessWidget {
         ),
       ],
     );
-  }
-
-  Widget _buildInfoItem(String label, String value) {
-    return Expanded(
-      child: Column(
-        children: [
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: isWeb ? 11 : 9,
-              color: AppTheme.grey,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: isWeb ? 12 : 10,
-              fontWeight: FontWeight.bold,
-              color: AppTheme.primaryGreen,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showImagePreview(OcrResult result, BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => ImagePreviewWidget(
-        imagePath: result.imagePath,
-        imageName: result.imageName,
-        isWeb: isWeb,
-      ),
-    );
-  }
-
-  void _copyToClipboard(String text, BuildContext context) {
-    Clipboard.setData(ClipboardData(text: text))
-        .then((_) {
-          // Show a snackbar instead of toast for better Flutter web compatibility
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Text('Text copied to clipboard!'),
-              backgroundColor: AppTheme.primaryGreen,
-              behavior: SnackBarBehavior.floating,
-              duration: const Duration(seconds: 2),
-            ),
-          );
-
-          // Also call the provider method if it handles any additional logic
-          final provider = Provider.of<OcrProvider>(context, listen: false);
-          provider.copyToClipboard(text);
-        })
-        .catchError((error) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Failed to copy: $error'),
-              backgroundColor: Colors.red,
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
-        });
   }
 }
