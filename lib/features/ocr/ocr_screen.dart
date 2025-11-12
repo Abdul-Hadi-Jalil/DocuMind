@@ -5,22 +5,8 @@ import 'package:provider/provider.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../widgets/custom_button.dart';
 
-class OcrScreen extends StatefulWidget {
+class OcrScreen extends StatelessWidget {
   const OcrScreen({super.key});
-
-  @override
-  State<OcrScreen> createState() => _OcrScreenState();
-}
-
-class _OcrScreenState extends State<OcrScreen> {
-  @override
-  void initState() {
-    super.initState();
-    // Clear any previous errors when screen loads
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<OcrProvider>(context, listen: false).clearError();
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -85,11 +71,11 @@ class _UploadSection extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 16),
-              Expanded(
+              const Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       'Extract Text from Images',
                       style: TextStyle(
                         fontSize: 24,
@@ -97,8 +83,8 @@ class _UploadSection extends StatelessWidget {
                         color: AppTheme.black,
                       ),
                     ),
-                    const SizedBox(height: 4),
-                    const Text(
+                    SizedBox(height: 4),
+                    Text(
                       'Upload images containing text and convert them to editable digital text',
                       style: TextStyle(fontSize: 16, color: AppTheme.grey),
                     ),
@@ -110,35 +96,13 @@ class _UploadSection extends StatelessWidget {
           const SizedBox(height: 24),
           // Upload Button
           CustomButton(
-            text: 'Upload from Device',
+            text: 'Upload Image',
             onPressed: provider.isUploading || provider.isProcessing
                 ? null
                 : () => provider.pickAndProcessImage(),
-            isLoading: provider.isUploading,
+            isLoading: provider.isUploading || provider.isProcessing,
             backgroundColor: AppTheme.primaryGreen,
           ),
-          // Processing Indicator
-          if (provider.isProcessing) ...[
-            const SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: AppTheme.primaryGreen,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                const Text(
-                  'Processing image and extracting text...',
-                  style: TextStyle(color: AppTheme.grey, fontSize: 14),
-                ),
-              ],
-            ),
-          ],
         ],
       ),
     );
