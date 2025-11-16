@@ -14,7 +14,7 @@ dependencies:
   flutter_markdown: ^0.7.7+1
   flutter_staggered_animations: ^1.1.1
   fluttertoast: ^9.0.0
-  http: ^1.5.0
+  http: ^1.6.0
   image_cropper: ^11.0.0
   image_gallery_saver: ^2.0.3
   image_picker: ^1.2.0
@@ -37,3 +37,6 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  
+  assets:
+    - assets/images/pakistani_boy_riding_bike.jpg

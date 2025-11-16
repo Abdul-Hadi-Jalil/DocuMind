@@ -56,7 +56,7 @@ class WebSidebar extends StatelessWidget {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Text(
-                              'FrogBase AI',
+                              'Froggy AI',
                               style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
@@ -137,34 +137,6 @@ class WebSidebar extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              authProvider.userEmail?.split('@').first ??
-                                  'User',
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: AppTheme.black,
-                              ),
-                            ),
-                            Text(
-                              authProvider.userEmail ?? '',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: AppTheme.grey,
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ],
-                        ),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.logout, size: 20),
-                        onPressed: () => authProvider.logout(),
-                        tooltip: 'Logout',
-                      ),
                     ],
                   )
                 : Center(

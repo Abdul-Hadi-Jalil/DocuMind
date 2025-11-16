@@ -1,6 +1,6 @@
 import 'package:documind/features/dashboard/data_module_data.dart';
 import 'package:documind/features/image_generation/screens/image_generation_screen.dart';
-import 'package:documind/features/ocr/screen_ocr_screen.dart';
+import 'package:documind/features/ocr/ocr_screen.dart';
 import 'package:documind/features/pdf_chat/screens/pdf_chat_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -57,17 +57,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Welcome back, ${authProvider.userEmail?.split('@').first ?? 'User'}! 👋',
-                  style: const TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
-                    color: AppTheme.white,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
                   'Choose an AI module to get started with your creative journey',
-                  style: TextStyle(fontSize: 18, color: AppTheme.grey),
+                  style: TextStyle(fontSize: 18, color: AppTheme.primaryGreen),
                 ),
               ],
             ),
@@ -105,6 +96,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
       decoration: BoxDecoration(
+        color: AppTheme.primaryGreen, // Changed to green
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.1),
@@ -123,12 +115,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 width: 40,
                 height: 40,
                 decoration: const BoxDecoration(
-                  color: AppTheme.primaryGreen,
+                  color: AppTheme.white, // Changed to white for contrast
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.person,
-                  color: AppTheme.white,
+                  color: AppTheme.primaryGreen, // Changed to green
                   size: 20,
                 ),
               ),
@@ -138,15 +130,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 children: [
                   Text(
                     'Welcome!',
-                    style: TextStyle(fontSize: 12, color: AppTheme.grey),
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: AppTheme.white, // Changed to white
+                    ),
                   ),
                   Consumer<AuthProvider>(
                     builder: (context, authProvider, child) {
                       return Text(
-                        authProvider.userEmail?.split('@').first ?? 'User',
+                        'User', // Removed specific name
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,
-                          color: AppTheme.white,
+                          color: AppTheme.white, // Changed to white
                         ),
                       );
                     },
@@ -158,7 +153,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
           const SizedBox(width: 20),
           // Logout button
           IconButton(
-            icon: const Icon(Icons.logout, color: AppTheme.grey),
+            icon: const Icon(
+              Icons.logout,
+              color: AppTheme.white,
+            ), // Changed to white
             onPressed: _logout,
             tooltip: 'Logout',
           ),
