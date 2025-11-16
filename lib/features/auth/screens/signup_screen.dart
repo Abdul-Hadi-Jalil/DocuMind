@@ -103,7 +103,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 ),
                 const SizedBox(height: 20),
                 const Text(
-                  'Join FrogBase AI',
+                  'Join Froggy AI',
                   style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,

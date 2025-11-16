@@ -27,8 +27,10 @@ class CustomTextField extends StatelessWidget {
       keyboardType: keyboardType,
       validator: validator,
       onChanged: onChanged,
+      style: const TextStyle(color: AppTheme.black), // Add this line
       decoration: InputDecoration(
         labelText: label,
+        labelStyle: const TextStyle(color: AppTheme.grey), // Label color
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: AppTheme.grey),

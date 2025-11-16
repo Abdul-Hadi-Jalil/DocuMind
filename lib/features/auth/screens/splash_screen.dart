@@ -64,7 +64,7 @@ class _SplashScreenState extends State<SplashScreen> {
             ),
             const SizedBox(height: 20),
             const Text(
-              'FrogBase AI',
+              'Froggy AI',
               style: TextStyle(
                 color: AppTheme.white,
                 fontSize: 28,

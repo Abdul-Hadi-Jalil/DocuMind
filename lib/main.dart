@@ -1,5 +1,3 @@
-import 'package:documind/features/image_generation/providers/image_generation_provider.dart';
-import 'package:documind/features/ocr/provider/ocr_provider.dart';
 import 'package:documind/features/pdf_chat/providers/pdf_chat_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -23,9 +21,7 @@ class MyApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => DashboardProvider()),
-        ChangeNotifierProvider(create: (_) => OcrProvider()),
         ChangeNotifierProvider(create: (_) => PdfChatProvider()),
-        ChangeNotifierProvider(create: (_) => ImageGenerationProvider()),
       ],
       child: MaterialApp(
         title: 'DocuMind AI',
@@ -37,8 +33,6 @@ class MyApp extends StatelessWidget {
         builder: (context, child) => ResponsiveBreakpoints.builder(
           child: child!,
           breakpoints: [
-            const Breakpoint(start: 0, end: 450, name: MOBILE),
-            const Breakpoint(start: 451, end: 800, name: TABLET),
             const Breakpoint(start: 801, end: 1920, name: DESKTOP),
             const Breakpoint(start: 1921, end: double.infinity, name: '4K'),
           ],

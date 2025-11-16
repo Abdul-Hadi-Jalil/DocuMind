@@ -88,28 +88,7 @@ class PdfListWidget extends StatelessWidget {
         padding: const EdgeInsets.all(32),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.description,
-              size: isWeb ? 64 : 48,
-              color: AppTheme.grey,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'No PDFs Uploaded',
-              style: TextStyle(
-                fontSize: isWeb ? 18 : 16,
-                fontWeight: FontWeight.bold,
-                color: AppTheme.grey,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Upload a PDF file to start chatting with AI',
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: isWeb ? 14 : 12, color: AppTheme.grey),
-            ),
-          ],
+          children: [],
         ),
       ),
     );
