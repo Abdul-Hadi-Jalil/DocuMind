@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../../core/theme/app_theme.dart';
-import '../../../widgets/custom_button.dart';
+import '../../core/theme/app_theme.dart';
+import '../../widgets/custom_button.dart';
 
 class ImageGenerationScreen extends StatelessWidget {
   const ImageGenerationScreen({super.key});
