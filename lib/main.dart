@@ -1,8 +1,7 @@
-import 'package:documind/features/pdf_chat/providers/pdf_chat_providers.dart';
+import 'package:documind/features/ocr/ocr_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:responsive_framework/responsive_framework.dart';
-
 import 'core/theme/app_theme.dart';
 import 'features/auth/providers/auth_provider.dart';
 import 'features/dashboard/providers/dashboard_provider.dart';
@@ -21,13 +20,12 @@ class MyApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => DashboardProvider()),
-        ChangeNotifierProvider(create: (_) => PdfChatProvider()),
       ],
       child: MaterialApp(
         title: 'DocuMind AI',
         theme: AppTheme.lightTheme,
         darkTheme: AppTheme.darkTheme,
-        home: const SplashScreen(),
+        home: OcrScreen(),
         debugShowCheckedModeBanner: false,
         // CORRECT responsive framework implementation
         builder: (context, child) => ResponsiveBreakpoints.builder(

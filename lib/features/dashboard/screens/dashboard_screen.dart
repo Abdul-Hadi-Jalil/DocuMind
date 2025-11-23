@@ -1,7 +1,7 @@
 import 'package:documind/features/dashboard/data_module_data.dart';
-import 'package:documind/features/image_generation/screens/image_generation_screen.dart';
+import 'package:documind/features/image_generation/image_generation_screen.dart';
 import 'package:documind/features/ocr/ocr_screen.dart';
-import 'package:documind/features/pdf_chat/screens/pdf_chat_screen.dart';
+import 'package:documind/features/pdf_chat/pdf_chat_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme/app_theme.dart';

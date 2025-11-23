@@ -1,6 +1,11 @@
+import 'dart:convert';
+import 'dart:typed_data';
 import 'package:documind/core/theme/app_theme.dart';
+import 'package:documind/features/ocr/models/ocr_result.dart';
 import 'package:documind/widgets/custom_button.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:image_picker/image_picker.dart';
 
 class OcrScreen extends StatefulWidget {
   const OcrScreen({super.key});
@@ -10,12 +15,125 @@ class OcrScreen extends StatefulWidget {
 }
 
 class _OcrScreenState extends State<OcrScreen> {
-  bool _showResults = false;
+  // varaibles used in pickAndSendImage funcition
+  XFile? selectedImage;
+  Uint8List? imageBytes;
+  OcrResult? backendResult;
 
-  void _toggleResults() {
-    setState(() {
-      _showResults = !_showResults;
-    });
+  // function to pick image convert to bytes and send to backend
+  Future<void> pickAndSendImage() async {
+    try {
+      final picker = await ImagePicker().pickImage(source: ImageSource.gallery);
+      if (picker != null) {
+        setState(() {
+          selectedImage = picker;
+          imageBytes = null; // Reset bytes when new image is selected
+        });
+
+        // Use mounted check before using context
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Image is successfully selected'),
+              duration: Duration(milliseconds: 500),
+            ),
+          );
+        }
+
+        final bytes = await selectedImage!.readAsBytes();
+        setState(() {
+          imageBytes = bytes;
+        });
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Image is converted to bytes'),
+              duration: Duration(milliseconds: 500),
+            ),
+          );
+        }
+        if (imageBytes != null) {
+          // url of backend
+          const String backendUrl = "http://127.0.0.1:8000/upload-image/";
+
+          // Create multipart request
+          var request = http.MultipartRequest('POST', Uri.parse(backendUrl));
+
+          // Add image file
+          request.files.add(
+            http.MultipartFile.fromBytes(
+              'file', // Field name (should match your backend expectation)
+              imageBytes!,
+              filename:
+                  'image_${DateTime.now().millisecondsSinceEpoch}.jpg', // this line is important to run the code
+            ),
+          );
+
+          var response = await request.send();
+
+          debugPrint('Response status: ${response.statusCode}');
+
+          if (response.statusCode == 200) {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Upload successful!'),
+                  duration: Duration(seconds: 1),
+                ),
+              );
+              // display the extracted text
+              var responseData = await response.stream.bytesToString();
+              var jsonResponse = jsonDecode(responseData);
+
+              OcrResult result = OcrResult.fromJson(jsonResponse);
+
+              debugPrint("Content Type: ${result.contentType}");
+              debugPrint("Extracted Text: ${result.extractedText}");
+
+              setState(() {
+                backendResult = result;
+              });
+            }
+          } else if (response.statusCode == 422) {
+            // Validation error - might be wrong field name
+            debugPrint('Validation error - check field name');
+
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Wrong field name? Check backend.'),
+                  duration: Duration(seconds: 1),
+                ),
+              );
+            }
+          } else {
+            throw Exception(
+              'Upload failed with status: ${response.statusCode}',
+            );
+          }
+
+          // message to show if image is successfully sended to backend
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Sending image to backend...'),
+                duration: Duration(seconds: 1),
+              ),
+            );
+          }
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to pick image: $e'),
+            duration: Duration(seconds: 1),
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -34,8 +152,9 @@ class _OcrScreenState extends State<OcrScreen> {
             // Upload Section
             _buildUploadSection(),
             const SizedBox(height: 24),
+
             // Results Area
-            Expanded(child: _buildResultsContent()),
+            _buildResultArea(),
           ],
         ),
       ),
@@ -97,10 +216,11 @@ class _OcrScreenState extends State<OcrScreen> {
             ],
           ),
           const SizedBox(height: 24),
+
           // Upload Button
           CustomButton(
-            text: _showResults ? 'Upload New Image' : 'Upload Image',
-            onPressed: _toggleResults,
+            text: 'Upload Image',
+            onPressed: pickAndSendImage,
             backgroundColor: AppTheme.primaryGreen,
           ),
         ],
@@ -108,8 +228,10 @@ class _OcrScreenState extends State<OcrScreen> {
     );
   }
 
-  Widget _buildResultsContent() {
+  Widget _buildResultArea() {
     return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: AppTheme.white,
         borderRadius: BorderRadius.circular(12),
@@ -121,116 +243,10 @@ class _OcrScreenState extends State<OcrScreen> {
           ),
         ],
       ),
-      child: _showResults ? _buildResultsDisplay() : _buildEmptyState(),
-    );
-  }
-
-  Widget _buildEmptyState() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.document_scanner, size: 64, color: AppTheme.grey),
-            const SizedBox(height: 16),
-            Text(
-              'No OCR Results',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: AppTheme.black, // Changed to black for visibility
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Upload an image to extract text',
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 14, color: AppTheme.grey),
-            ),
-          ],
-        ),
+      child: SelectableText(
+        backendResult?.extractedText ?? "No Extracted Text",
+        style: TextStyle(color: Colors.black),
       ),
-    );
-  }
-
-  Widget _buildResultsDisplay() {
-    const String dummyText = '''
-INVOICE #: INV-2024-001
-DATE: December 15, 2024
-COMPANY: Tech Solutions Inc.
-
-ITEMS:
-1. Web Development Services - \$2,500.00
-2. Mobile App Development - \$3,200.00
-3. UI/UX Design - \$1,800.00
-
-SUBTOTAL: \$7,500.00
-TAX (10%): \$750.00
-TOTAL: \$8,250.00
-
-Thank you for your business!
-This is a demonstration of extracted text from an image.
-''';
-
-    return Column(
-      children: [
-        // Header
-        Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              const Icon(Icons.text_snippet, color: AppTheme.primaryGreen),
-              const SizedBox(width: 8),
-              const Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'sample_image.jpg',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: AppTheme.black, // Changed to black
-                      ),
-                    ),
-                    SizedBox(height: 2),
-                    Text(
-                      'Text extracted successfully!',
-                      style: TextStyle(fontSize: 12, color: AppTheme.grey),
-                    ),
-                  ],
-                ),
-              ),
-              IconButton(
-                icon: const Icon(
-                  Icons.close,
-                  color: AppTheme.black,
-                ), // Changed to black
-                onPressed: _toggleResults,
-                tooltip: 'Clear Results',
-              ),
-            ],
-          ),
-        ),
-        const Divider(height: 1),
-        // Text Content
-        Expanded(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: SingleChildScrollView(
-              child: Text(
-                dummyText,
-                style: const TextStyle(
-                  fontSize: 14,
-                  height: 1.5,
-                  color: AppTheme.black, // Explicitly set to black
-                ),
-              ),
-            ),
-          ),
-        ),
-      ],
     );
   }
 }
