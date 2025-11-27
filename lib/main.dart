@@ -1,11 +1,11 @@
 import 'package:documind/features/ocr/ocr_screen.dart';
+import 'package:documind/features/pdf_chat/pdf_chat_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:responsive_framework/responsive_framework.dart';
 import 'core/theme/app_theme.dart';
 import 'features/auth/providers/auth_provider.dart';
 import 'features/dashboard/providers/dashboard_provider.dart';
-import 'features/auth/screens/splash_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -25,7 +25,7 @@ class MyApp extends StatelessWidget {
         title: 'DocuMind AI',
         theme: AppTheme.lightTheme,
         darkTheme: AppTheme.darkTheme,
-        home: OcrScreen(),
+        home: SimpleChatScreen(),
         debugShowCheckedModeBanner: false,
         // CORRECT responsive framework implementation
         builder: (context, child) => ResponsiveBreakpoints.builder(

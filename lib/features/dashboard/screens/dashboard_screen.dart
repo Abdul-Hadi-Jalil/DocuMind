@@ -169,7 +169,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     if (route == '/pdf-chat') {
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => const PdfChatScreen()),
+        MaterialPageRoute(builder: (context) => SimpleChatScreen()),
       );
     } else if (route == '/ocr') {
       Navigator.push(
