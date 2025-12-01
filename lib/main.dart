@@ -1,5 +1,4 @@
-import 'package:documind/features/ocr/ocr_screen.dart';
-import 'package:documind/features/pdf_chat/pdf_chat_screen.dart';
+import 'package:documind/features/image_generation/image_generation_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:responsive_framework/responsive_framework.dart';
@@ -25,7 +24,7 @@ class MyApp extends StatelessWidget {
         title: 'DocuMind AI',
         theme: AppTheme.lightTheme,
         darkTheme: AppTheme.darkTheme,
-        home: SimpleChatScreen(),
+        home: ImageGenerationScreen(),
         debugShowCheckedModeBanner: false,
         // CORRECT responsive framework implementation
         builder: (context, child) => ResponsiveBreakpoints.builder(
