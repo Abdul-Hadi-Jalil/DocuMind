@@ -1,8 +1,6 @@
 import 'dart:convert';
 import 'dart:typed_data';
-import 'package:documind/core/theme/app_theme.dart';
 import 'package:documind/features/ocr/models/ocr_result.dart';
-import 'package:documind/widgets/custom_button.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
@@ -139,12 +137,7 @@ class _OcrScreenState extends State<OcrScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.background,
-      appBar: AppBar(
-        title: const Text('OCR Scanner'),
-        backgroundColor: AppTheme.primaryGreen,
-        foregroundColor: AppTheme.white,
-      ),
+      appBar: AppBar(title: const Text('OCR Scanner')),
       body: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
@@ -165,7 +158,6 @@ class _OcrScreenState extends State<OcrScreen> {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: AppTheme.white,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
@@ -182,15 +174,8 @@ class _OcrScreenState extends State<OcrScreen> {
             children: [
               Container(
                 padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: AppTheme.primaryGreen.withOpacity(0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.document_scanner,
-                  color: AppTheme.primaryGreen,
-                  size: 32,
-                ),
+                decoration: BoxDecoration(shape: BoxShape.circle),
+                child: const Icon(Icons.document_scanner, size: 32),
               ),
               const SizedBox(width: 16),
               const Expanded(
@@ -202,13 +187,12 @@ class _OcrScreenState extends State<OcrScreen> {
                       style: TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
-                        color: AppTheme.black,
                       ),
                     ),
                     SizedBox(height: 4),
                     Text(
                       'Upload images containing text and convert them to editable digital text',
-                      style: TextStyle(fontSize: 16, color: AppTheme.grey),
+                      style: TextStyle(fontSize: 16),
                     ),
                   ],
                 ),
@@ -218,11 +202,6 @@ class _OcrScreenState extends State<OcrScreen> {
           const SizedBox(height: 24),
 
           // Upload Button
-          CustomButton(
-            text: 'Upload Image',
-            onPressed: pickAndSendImage,
-            backgroundColor: AppTheme.primaryGreen,
-          ),
         ],
       ),
     );
@@ -233,7 +212,6 @@ class _OcrScreenState extends State<OcrScreen> {
       width: double.infinity,
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: AppTheme.white,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(

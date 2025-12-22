@@ -1,9 +1,7 @@
-import 'package:documind/features/image_generation/image_generation_screen.dart';
+import 'package:documind/features/auth/screens/login_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:responsive_framework/responsive_framework.dart';
-import 'core/theme/app_theme.dart';
-import 'features/auth/providers/auth_provider.dart';
 import 'features/dashboard/providers/dashboard_provider.dart';
 
 void main() {
@@ -16,15 +14,11 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => AuthProvider()),
-        ChangeNotifierProvider(create: (_) => DashboardProvider()),
-      ],
+      providers: [ChangeNotifierProvider(create: (_) => DashboardProvider())],
       child: MaterialApp(
         title: 'DocuMind AI',
-        theme: AppTheme.lightTheme,
-        darkTheme: AppTheme.darkTheme,
-        home: ImageGenerationScreen(),
+        theme: ThemeData.dark(),
+        home: LoginPage(),
         debugShowCheckedModeBanner: false,
         // CORRECT responsive framework implementation
         builder: (context, child) => ResponsiveBreakpoints.builder(

@@ -1,9 +1,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import '../../core/theme/app_theme.dart';
 
 class ImageGenerationScreen extends StatefulWidget {
   const ImageGenerationScreen({super.key});
@@ -71,7 +69,6 @@ class _ImageGenerationScreenState extends State<ImageGenerationScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: const Text('Image generated successfully!'),
-              backgroundColor: AppTheme.primaryGreen,
               duration: const Duration(seconds: 2),
             ),
           );
@@ -114,12 +111,7 @@ class _ImageGenerationScreenState extends State<ImageGenerationScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.background,
-      appBar: AppBar(
-        title: const Text('AI Image Generation'),
-        backgroundColor: AppTheme.primaryGreen,
-        foregroundColor: AppTheme.white,
-      ),
+      appBar: AppBar(title: const Text('AI Image Generation')),
       body: Column(
         children: [
           // Image Display Section - Takes most of the screen
@@ -141,16 +133,12 @@ class _ImageGenerationScreenState extends State<ImageGenerationScreen> {
           // Header
           const Text(
             'AI Generated Image',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: AppTheme.black,
-            ),
+            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
           const Text(
             'Describe what you want to create',
-            style: TextStyle(fontSize: 16, color: AppTheme.grey),
+            style: TextStyle(fontSize: 16),
           ),
           const SizedBox(height: 32),
 
@@ -159,7 +147,6 @@ class _ImageGenerationScreenState extends State<ImageGenerationScreen> {
             child: Container(
               constraints: const BoxConstraints(maxWidth: 700, maxHeight: 700),
               decoration: BoxDecoration(
-                color: AppTheme.white,
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
@@ -205,28 +192,16 @@ class _ImageGenerationScreenState extends State<ImageGenerationScreen> {
 
   Widget _buildLoadingState() {
     return Container(
-      color: AppTheme.background,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const CircularProgressIndicator(color: AppTheme.primaryGreen),
           const SizedBox(height: 24),
           Text(
             'Generating image...',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w500,
-              color: AppTheme.grey,
-            ),
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
           ),
           const SizedBox(height: 8),
-          Text(
-            'This may take a few moments',
-            style: TextStyle(
-              fontSize: 14,
-              color: AppTheme.grey.withOpacity(0.7),
-            ),
-          ),
+          Text('This may take a few moments', style: TextStyle(fontSize: 14)),
         ],
       ),
     );
@@ -234,30 +209,18 @@ class _ImageGenerationScreenState extends State<ImageGenerationScreen> {
 
   Widget _buildPlaceholder({String? title, String? message}) {
     return Container(
-      color: AppTheme.background,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
             padding: const EdgeInsets.all(32),
-            decoration: BoxDecoration(
-              color: AppTheme.primaryGreen.withOpacity(0.1),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              Icons.auto_awesome,
-              size: 80,
-              color: AppTheme.primaryGreen.withOpacity(0.6),
-            ),
+            decoration: BoxDecoration(shape: BoxShape.circle),
+            child: Icon(Icons.auto_awesome, size: 80),
           ),
           const SizedBox(height: 24),
           Text(
             title ?? 'No Image Generated Yet',
-            style: const TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: AppTheme.grey,
-            ),
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 12),
           Padding(
@@ -265,7 +228,7 @@ class _ImageGenerationScreenState extends State<ImageGenerationScreen> {
             child: Text(
               message ??
                   'Type a description below and click the send button to generate your AI image',
-              style: const TextStyle(fontSize: 14, color: AppTheme.grey),
+              style: const TextStyle(fontSize: 14),
               textAlign: TextAlign.center,
             ),
           ),
@@ -278,7 +241,6 @@ class _ImageGenerationScreenState extends State<ImageGenerationScreen> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppTheme.white,
         border: Border(top: BorderSide(color: Colors.grey.shade200)),
         boxShadow: [
           BoxShadow(
@@ -293,7 +255,6 @@ class _ImageGenerationScreenState extends State<ImageGenerationScreen> {
           Expanded(
             child: Container(
               decoration: BoxDecoration(
-                color: AppTheme.background,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: Colors.grey.shade300),
               ),
@@ -304,10 +265,8 @@ class _ImageGenerationScreenState extends State<ImageGenerationScreen> {
                       controller: userPrompt,
                       maxLines: null,
                       textInputAction: TextInputAction.newline,
-                      style: const TextStyle(color: AppTheme.black),
                       decoration: const InputDecoration(
                         hintText: 'Describe the image you want to generate...',
-                        hintStyle: TextStyle(color: AppTheme.grey),
                         border: InputBorder.none,
                         contentPadding: EdgeInsets.symmetric(
                           horizontal: 16,
@@ -323,10 +282,7 @@ class _ImageGenerationScreenState extends State<ImageGenerationScreen> {
                       child: SizedBox(
                         width: 20,
                         height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: AppTheme.primaryGreen,
-                        ),
+                        child: CircularProgressIndicator(strokeWidth: 2),
                       ),
                     ),
                 ],
@@ -338,21 +294,12 @@ class _ImageGenerationScreenState extends State<ImageGenerationScreen> {
           Container(
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [
-                  AppTheme.primaryGreen,
-                  AppTheme.primaryGreen.withOpacity(0.8),
-                ],
+                colors: [],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
               borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: AppTheme.primaryGreen.withOpacity(0.3),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
+              boxShadow: [BoxShadow(blurRadius: 8, offset: const Offset(0, 2))],
             ),
             child: Material(
               color: Colors.transparent,
@@ -362,11 +309,7 @@ class _ImageGenerationScreenState extends State<ImageGenerationScreen> {
                 borderRadius: BorderRadius.circular(12),
                 child: Container(
                   padding: const EdgeInsets.all(16),
-                  child: Icon(
-                    Icons.send_rounded,
-                    color: AppTheme.white,
-                    size: 24,
-                  ),
+                  child: Icon(Icons.send_rounded, size: 24),
                 ),
               ),
             ),
