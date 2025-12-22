@@ -1,34 +1,36 @@
+import 'package:documind/app.dart';
 import 'package:documind/features/auth/screens/login_screen.dart';
+import 'package:documind/firebase_options.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:responsive_framework/responsive_framework.dart';
-import 'features/dashboard/providers/dashboard_provider.dart';
+//import 'package:responsive_framework/responsive_framework.dart';
 
-void main() {
-  runApp(const MyApp());
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  runApp(const Documind());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class Documind extends StatelessWidget {
+  const Documind({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return MultiProvider(
-      providers: [ChangeNotifierProvider(create: (_) => DashboardProvider())],
-      child: MaterialApp(
-        title: 'DocuMind AI',
-        theme: ThemeData.dark(),
-        home: LoginPage(),
-        debugShowCheckedModeBanner: false,
-        // CORRECT responsive framework implementation
-        builder: (context, child) => ResponsiveBreakpoints.builder(
-          child: child!,
-          breakpoints: [
-            const Breakpoint(start: 801, end: 1920, name: DESKTOP),
-            const Breakpoint(start: 1921, end: double.infinity, name: '4K'),
-          ],
-        ),
+    return MaterialApp(
+      title: 'DocuMind AI',
+      theme: ThemeData.dark(),
+      home: App(),
+      debugShowCheckedModeBanner: false,
+      /*
+      // CORRECT responsive framework implementation
+      builder: (context, child) => ResponsiveBreakpoints.builder(
+        child: child!,
+        breakpoints: [
+          const Breakpoint(start: 801, end: 1920, name: DESKTOP),
+          const Breakpoint(start: 1921, end: double.infinity, name: '4K'),
+        ],
       ),
+*/
     );
   }
 }

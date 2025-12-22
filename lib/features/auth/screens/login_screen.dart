@@ -1,3 +1,4 @@
+import 'package:documind/features/auth/screens/signup_screen.dart';
 import 'package:flutter/material.dart';
 
 class LoginPage extends StatefulWidget {
@@ -10,7 +11,6 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  bool _rememberMe = false;
   bool _isPasswordVisible = false;
 
   @override
@@ -24,44 +24,12 @@ class _LoginPageState extends State<LoginPage> {
             colors: [Color(0xFF0A0A0A), Color(0xFF1A1A1A)],
           ),
         ),
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24.0),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24.0),
+          child: Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Back to Home Button (Top Left)
-                Positioned(
-                  top: 32,
-                  left: 32,
-                  child: GestureDetector(
-                    onTap: () {
-                      // TODO: Implement navigation to home
-                      // ignore: avoid_print
-                      print('Navigate to home');
-                    },
-                    child: const Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.arrow_back,
-                          color: Color(0xFF00FF88),
-                          size: 20,
-                        ),
-                        SizedBox(width: 8),
-                        Text(
-                          'Back to Home',
-                          style: TextStyle(
-                            color: Color(0xFF00FF88),
-                            fontSize: 16,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-
                 const SizedBox(height: 60),
 
                 // Login Card
@@ -256,43 +224,6 @@ class _LoginPageState extends State<LoginPage> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          // Remember Me Checkbox
-                          Row(
-                            children: [
-                              Checkbox(
-                                value: _rememberMe,
-                                onChanged: (value) {
-                                  setState(() {
-                                    _rememberMe = value ?? false;
-                                  });
-                                },
-                                fillColor:
-                                    WidgetStateProperty.resolveWith<Color>((
-                                      Set<WidgetState> states,
-                                    ) {
-                                      if (states.contains(
-                                        WidgetState.selected,
-                                      )) {
-                                        return const Color(0xFF00FF88);
-                                      }
-                                      return Colors.transparent;
-                                    }),
-                                checkColor: Colors.black,
-                                side: BorderSide(
-                                  // ignore: deprecated_member_use
-                                  color: Colors.white.withOpacity(0.3),
-                                ),
-                              ),
-                              const Text(
-                                'Remember me',
-                                style: TextStyle(
-                                  color: Color(0xFFAAAAAA),
-                                  fontSize: 14,
-                                ),
-                              ),
-                            ],
-                          ),
-
                           // Forgot Password
                           GestureDetector(
                             onTap: () {
@@ -326,7 +257,6 @@ class _LoginPageState extends State<LoginPage> {
                             // ignore: avoid_print
                             print('Password: ${_passwordController.text}');
                             // ignore: avoid_print
-                            print('Remember me: $_rememberMe');
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.transparent,
@@ -377,9 +307,12 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                           GestureDetector(
                             onTap: () {
-                              // TODO: Implement navigation to signup page
-                              // ignore: avoid_print
-                              print('Navigate to signup');
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => SignUpPage(),
+                                ),
+                              );
                             },
                             child: const Text(
                               'Sign up',
