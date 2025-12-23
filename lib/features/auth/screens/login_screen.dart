@@ -64,7 +64,7 @@ class _LoginPageState extends State<LoginPage> {
                               colors: [Color(0xFF00FF88), Color(0xFF00D4FF)],
                             ).createShader(bounds),
                             child: const Text(
-                              'AI Suite',
+                              'Froggy AI',
                               style: TextStyle(
                                 fontSize: 32,
                                 fontWeight: FontWeight.bold,

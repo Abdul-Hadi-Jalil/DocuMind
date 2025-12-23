@@ -54,7 +54,7 @@ class _LandingScreenState extends State<LandingScreen> {
                         colors: [Color(0xFF00FF88), Color(0xFF00D4FF)],
                       ).createShader(bounds),
                       child: const Text(
-                        'AI Suite',
+                        'Froggy AI',
                         style: TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,

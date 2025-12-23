@@ -1,409 +1,377 @@
 import 'package:flutter/material.dart';
-import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:uuid/uuid.dart';
-import 'dart:convert';
+import 'dart:io';
 
-// Gemini API Service
-class GeminiService {
-  static const String _systemPrompt = '''
-You are **DocuBot**, a smart, friendly AI assistant that helps users understand and explore the content of an uploaded file.
-
-Use the uploaded file's content as your primary knowledge source to answer the user's questions clearly and accurately.
-
-If the question is completely unrelated to the file, respond kindly:
-"The uploaded file doesn't contain any information about that topic, but I can still help you understand it if you'd like."
-''';
-
-  static const String apiKey = 'AIzaSyC-WrzKEAmIETrxZnmyjF7iDJJNJ5RKEGE';
-
-  static Future<String> getResponse(
-    String userPrompt,
-    String? fileContent,
-    String? fileName,
-  ) async {
-    try {
-      final model = GenerativeModel(
-        model: 'gemini-2.5-pro',
-        apiKey: apiKey,
-        systemInstruction: Content.text(_systemPrompt),
-      );
-
-      final prompt =
-          '''
-Here is the content of the uploaded file named "$fileName":
----
-$fileContent
----
-
-User's question:
-"$userPrompt"
-''';
-
-      final response = await model.generateContent([Content.text(prompt)]);
-      return response.text ?? "I didn't get a response. Please try again.";
-    } catch (e) {
-      return "Service is temporarily unavailable. Please try again shortly.";
-    }
-  }
+void main() {
+  runApp(const MyApp());
 }
 
-// File Helper
-class FileHelper {
-  static Future<Map<String, dynamic>?> pickFile() async {
-    FilePickerResult? result = await FilePicker.platform.pickFiles(
-      allowedExtensions: ['txt', 'pdf'],
-      type: FileType.custom,
-    );
-
-    if (result == null) return null;
-
-    final file = result.files.first;
-    String? content;
-
-    if (file.extension == "txt" && file.bytes != null) {
-      content = utf8.decode(file.bytes!);
-    } else if (file.extension == "pdf") {
-      content = "[PDF content would be extracted here]";
-    }
-
-    if (content != null && content.isNotEmpty) {
-      return {'content': content, 'name': file.name, 'size': file.size};
-    }
-
-    return null;
-  }
-}
-
-// Message Model
-class ChatMessage {
-  final String id;
-  final String text;
-  final bool isUser;
-  final DateTime timestamp;
-
-  ChatMessage({
-    required this.id,
-    required this.text,
-    required this.isUser,
-    required this.timestamp,
-  });
-}
-
-// Main Chat Screen
-class SimpleChatScreen extends StatefulWidget {
-  const SimpleChatScreen({super.key});
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
 
   @override
-  State<SimpleChatScreen> createState() => _SimpleChatScreenState();
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Froggy AI',
+      theme: ThemeData.dark().copyWith(
+        scaffoldBackgroundColor: const Color(0xFF0A0A0A),
+        primaryColor: const Color(0xFF00D9C0),
+      ),
+      home: const PDFChatScreen(),
+      debugShowCheckedModeBanner: false,
+    );
+  }
 }
 
-class _SimpleChatScreenState extends State<SimpleChatScreen> {
-  final List<ChatMessage> _messages = [];
-  final TextEditingController _textController = TextEditingController();
-  final ScrollController _scrollController = ScrollController();
-  final uuid = const Uuid();
+class PDFChatScreen extends StatefulWidget {
+  const PDFChatScreen({super.key});
 
-  String? _fileName;
-  String? _fileContent;
-  bool _isTyping = false;
-  int _availablePrompts = 5;
+  @override
+  State<PDFChatScreen> createState() => _PDFChatScreenState();
+}
+
+class _PDFChatScreenState extends State<PDFChatScreen> {
+  final TextEditingController _messageController = TextEditingController();
+  final List<ChatMessage> _messages = [];
+  File? _uploadedFile;
 
   @override
   void initState() {
     super.initState();
-    _addWelcomeMessage();
-  }
-
-  void _addWelcomeMessage() {
+    // Add initial bot message
     _messages.add(
       ChatMessage(
-        id: uuid.v4(),
-        text: _fileName != null
-            ? "Hello! I'm DocuBot. I can help you understand and explore the content of '$_fileName'. What would you like to know?"
-            : "Hello! I'm DocuBot. Please upload a file first to start chatting about its content.",
+        text:
+            "Hello! I'm ready to help you with your PDF. Upload a document and ask me anything about it!",
         isUser: false,
-        timestamp: DateTime.now(),
       ),
     );
-    setState(() {});
   }
 
   Future<void> _pickFile() async {
-    final fileInfo = await FileHelper.pickFile();
-    if (fileInfo != null) {
+    FilePickerResult? result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['pdf'],
+    );
+
+    if (result != null) {
       setState(() {
-        _fileName = fileInfo['name'];
-        _fileContent = fileInfo['content'];
-        _messages.clear();
+        _uploadedFile = File(result.files.single.path!);
       });
-      _addWelcomeMessage();
-    }
-  }
-
-  Future<void> _sendMessage() async {
-    final text = _textController.text.trim();
-    if (text.isEmpty) return;
-
-    if (_fileContent == null) {
-      _addMessage("Please upload a file first to start chatting.", false);
-      _textController.clear();
-      return;
-    }
-
-    if (_availablePrompts <= 0) {
-      _showNoPromptsDialog();
-      return;
-    }
-
-    // Add user message
-    _addMessage(text, true);
-    _textController.clear();
-
-    // Use one prompt
-    setState(() {
-      _availablePrompts--;
-      _isTyping = true;
-    });
-
-    // Get AI response
-    try {
-      final response = await GeminiService.getResponse(
-        text,
-        _fileContent,
-        _fileName,
-      );
-      setState(() {
-        _isTyping = false;
-      });
-      _addMessage(response, false);
-    } catch (e) {
-      setState(() {
-        _isTyping = false;
-      });
-      _addMessage("Error: Please try again.", false);
-    }
-  }
-
-  void _addMessage(String text, bool isUser) {
-    setState(() {
-      _messages.add(
-        ChatMessage(
-          id: uuid.v4(),
-          text: text,
-          isUser: isUser,
-          timestamp: DateTime.now(),
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('File uploaded: ${result.files.single.name}'),
+          backgroundColor: const Color(0xFF00D9C0),
         ),
       );
+    }
+  }
+
+  void _sendMessage() {
+    if (_messageController.text.trim().isEmpty) return;
+
+    setState(() {
+      _messages.add(ChatMessage(text: _messageController.text, isUser: true));
+      _messageController.clear();
+
+      // Simulate bot response
+      Future.delayed(const Duration(milliseconds: 500), () {
+        setState(() {
+          _messages.add(
+            ChatMessage(
+              text:
+                  "I've received your question. Please note this is a demo - in a real app, I would analyze your PDF and provide relevant answers.",
+              isUser: false,
+            ),
+          );
+        });
+      });
     });
-    _scrollToBottom();
-  }
-
-  void _scrollToBottom() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_scrollController.hasClients) {
-        _scrollController.animateTo(
-          _scrollController.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeOut,
-        );
-      }
-    });
-  }
-
-  void _showNoPromptsDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('No Prompts Available'),
-        content: const Text('You have used all your available prompts.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('OK'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMessageBubble(ChatMessage message) {
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 16),
-      child: Row(
-        mainAxisAlignment: message.isUser
-            ? MainAxisAlignment.end
-            : MainAxisAlignment.start,
-        children: [
-          if (!message.isUser)
-            const CircleAvatar(
-              backgroundColor: Colors.blue,
-              child: Text('D', style: TextStyle(color: Colors.white)),
-            ),
-          const SizedBox(width: 8),
-          Flexible(
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: BoxDecoration(
-                color: message.isUser ? Colors.blue : Colors.grey[200],
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Text(
-                message.text,
-                style: TextStyle(
-                  color: message.isUser ? Colors.white : Colors.black,
-                  fontSize: 16,
-                ),
-              ),
-            ),
-          ),
-          if (message.isUser) const SizedBox(width: 8),
-          if (message.isUser)
-            const CircleAvatar(
-              backgroundColor: Colors.green,
-              child: Icon(Icons.person, color: Colors.white, size: 16),
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTypingIndicator() {
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 16),
-      child: Row(
-        children: [
-          const CircleAvatar(
-            backgroundColor: Colors.blue,
-            child: Text('D', style: TextStyle(color: Colors.white)),
-          ),
-          const SizedBox(width: 8),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(
-              color: Colors.grey[200],
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _buildAnimatedDot(0),
-                const SizedBox(width: 4),
-                _buildAnimatedDot(200),
-                const SizedBox(width: 4),
-                _buildAnimatedDot(400),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAnimatedDot(int delay) {
-    return Container(
-      width: 8,
-      height: 8,
-      decoration: const BoxDecoration(
-        color: Colors.blue,
-        shape: BoxShape.circle,
-      ),
-    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        title: Text(_fileName ?? 'Document Chat'),
-        backgroundColor: Colors.blue,
-        foregroundColor: Colors.white,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.upload_file),
-            onPressed: _pickFile,
-            tooltip: 'Upload File',
-          ),
-        ],
-      ),
       body: Column(
         children: [
-          // Prompt counter
+          // Header
           Container(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
             decoration: BoxDecoration(
-              color: Colors.blue[50],
-              border: Border(bottom: BorderSide(color: Colors.grey.shade300)),
+              color: const Color(0xFF0A0A0A),
+              border: Border(
+                bottom: BorderSide(
+                  color: Colors.grey.withOpacity(0.2),
+                  width: 1,
+                ),
+              ),
+            ),
+            child: SafeArea(
+              bottom: false,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Froggy AI',
+                    style: TextStyle(
+                      color: Color(0xFF00D9C0),
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const Spacer(),
+                  const Text(
+                    'Chat with PDF',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 24,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const Spacer(),
+                  Row(
+                    children: [
+                      TextButton.icon(
+                        onPressed: () {},
+                        icon: const Icon(Icons.arrow_back, color: Colors.grey),
+                        label: const Text(
+                          'Dashboard',
+                          style: TextStyle(color: Colors.grey),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      CircleAvatar(
+                        backgroundColor: const Color(0xFF00D9C0),
+                        radius: 20,
+                        child: const Text(
+                          'JD',
+                          style: TextStyle(
+                            color: Colors.black,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          // Upload PDF Section
+          Container(
+            margin: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              border: Border.all(
+                color: const Color(0xFF00D9C0).withOpacity(0.3),
+                width: 2,
+                strokeAlign: BorderSide.strokeAlignInside,
+              ),
+              borderRadius: BorderRadius.circular(12),
+              color: Colors.transparent,
             ),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.bolt, color: Colors.orange[700], size: 20),
-                const SizedBox(width: 8),
-                Text(
-                  '$_availablePrompts ${_availablePrompts == 1 ? 'prompt' : 'prompts'} available',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 14,
-                    color: Colors.blueGrey,
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(
+                    Icons.insert_drive_file_outlined,
+                    color: Colors.white,
+                    size: 32,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        _uploadedFile != null
+                            ? _uploadedFile!.path.split('/').last
+                            : 'Upload PDF',
+                        style: const TextStyle(
+                          color: Color(0xFF00D9C0),
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        _uploadedFile != null
+                            ? 'File uploaded successfully'
+                            : 'Click to browse or drag & drop',
+                        style: TextStyle(
+                          color: Colors.grey.shade400,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                ElevatedButton(
+                  onPressed: _pickFile,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF00D9C0),
+                    foregroundColor: Colors.black,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 32,
+                      vertical: 16,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: const Text(
+                    'Choose File',
+                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
                   ),
                 ),
               ],
             ),
           ),
-          // Chat messages
+
+          // Chat Messages
           Expanded(
             child: ListView.builder(
-              controller: _scrollController,
-              padding: const EdgeInsets.only(bottom: 8),
-              itemCount: _messages.length + (_isTyping ? 1 : 0),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              itemCount: _messages.length,
               itemBuilder: (context, index) {
-                if (index < _messages.length) {
-                  return _buildMessageBubble(_messages[index]);
-                } else {
-                  return _buildTypingIndicator();
-                }
+                return ChatBubble(message: _messages[index]);
               },
             ),
           ),
-          // Input area
+
+          // Input Area
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              border: Border(top: BorderSide(color: Colors.grey.shade300)),
+              color: const Color(0xFF0A0A0A),
+              border: Border(
+                top: BorderSide(color: Colors.grey.withOpacity(0.2), width: 1),
+              ),
             ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    style: TextStyle(color: Colors.black),
-                    controller: _textController,
-                    decoration: InputDecoration(
-                      enabledBorder: OutlineInputBorder(),
-                      hintText: 'Type your message...',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(24),
+            child: SafeArea(
+              top: false,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF1A1A1A),
+                        borderRadius: BorderRadius.circular(30),
                       ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
+                      child: TextField(
+                        controller: _messageController,
+                        style: const TextStyle(color: Colors.white),
+                        decoration: InputDecoration(
+                          hintText: 'Ask a question about your PDF...',
+                          hintStyle: TextStyle(color: Colors.grey.shade600),
+                          border: InputBorder.none,
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 24,
+                            vertical: 16,
+                          ),
+                        ),
+                        onSubmitted: (_) => _sendMessage(),
                       ),
                     ),
-                    onSubmitted: (_) => _sendMessage(),
                   ),
-                ),
-                const SizedBox(width: 8),
-                CircleAvatar(
-                  backgroundColor: Colors.blue,
-                  child: IconButton(
-                    icon: const Icon(Icons.send, color: Colors.white),
+                  const SizedBox(width: 12),
+                  FloatingActionButton(
                     onPressed: _sendMessage,
+                    backgroundColor: const Color(0xFF00D9C0),
+                    child: const Icon(Icons.send, color: Colors.black),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _messageController.dispose();
+    super.dispose();
+  }
+}
+
+class ChatMessage {
+  final String text;
+  final bool isUser;
+
+  ChatMessage({required this.text, required this.isUser});
+}
+
+class ChatBubble extends StatelessWidget {
+  final ChatMessage message;
+
+  const ChatBubble({super.key, required this.message});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (!message.isUser) ...[
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: const Color(0xFF1A1A1A),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(
+                Icons.android,
+                color: Color(0xFF00D9C0),
+                size: 24,
+              ),
+            ),
+            const SizedBox(width: 12),
+          ],
+          Expanded(
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: message.isUser
+                    ? const Color(0xFF00D9C0).withOpacity(0.1)
+                    : const Color(0xFF1A1A1A),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                message.text,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 15,
+                  height: 1.4,
+                ),
+              ),
+            ),
+          ),
+          if (message.isUser) ...[
+            const SizedBox(width: 12),
+            CircleAvatar(
+              backgroundColor: const Color(0xFF00D9C0),
+              radius: 20,
+              child: const Text(
+                'JD',
+                style: TextStyle(
+                  color: Colors.black,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );

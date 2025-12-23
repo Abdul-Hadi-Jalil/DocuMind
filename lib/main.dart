@@ -1,5 +1,7 @@
-import 'package:documind/app.dart';
+import 'package:documind/features/auth/screens/landing_screen.dart';
 import 'package:documind/features/auth/screens/login_screen.dart';
+import 'package:documind/features/auth/screens/signup_screen.dart';
+import 'package:documind/features/pdf_chat/pdf_chat_screen.dart';
 import 'package:documind/firebase_options.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -19,7 +21,7 @@ class Documind extends StatelessWidget {
     return MaterialApp(
       title: 'DocuMind AI',
       theme: ThemeData.dark(),
-      home: App(),
+      home: PDFChatScreen(),
       debugShowCheckedModeBanner: false,
       /*
       // CORRECT responsive framework implementation
