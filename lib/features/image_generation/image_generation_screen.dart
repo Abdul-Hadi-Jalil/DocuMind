@@ -3,30 +3,31 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
-class ImageGenerationScreen extends StatefulWidget {
-  const ImageGenerationScreen({super.key});
+class ImageGenerationPage extends StatefulWidget {
+  const ImageGenerationPage({super.key});
 
   @override
-  State<ImageGenerationScreen> createState() => _ImageGenerationScreenState();
+  State<ImageGenerationPage> createState() => _ImageGenerationPageState();
 }
 
-class _ImageGenerationScreenState extends State<ImageGenerationScreen> {
-  // controller to send the prompt to backend to generate image
-  TextEditingController userPrompt = TextEditingController();
+class _ImageGenerationPageState extends State<ImageGenerationPage> {
+  final TextEditingController _promptController = TextEditingController();
   bool _isGenerating = false;
+  bool _hasImage = false;
   Uint8List? _generatedImageBytes;
+  String _currentPrompt = '';
 
-  Future<void> generateImage() async {
-    final prompt = userPrompt.text.trim();
+  Future<void> _generateImage() async {
+    final prompt = _promptController.text.trim();
     if (prompt.isEmpty) return;
 
     setState(() {
       _isGenerating = true;
-      _generatedImageBytes = null; // Clear previous image
+      _generatedImageBytes = null;
+      _hasImage = false;
     });
 
     try {
-      // Prepare the request body
       final requestBody = {
         'prompt': prompt,
         'width': 1024,
@@ -36,71 +37,43 @@ class _ImageGenerationScreenState extends State<ImageGenerationScreen> {
         'seed': -1,
       };
 
-      // Make the POST request
       final response = await http.post(
         Uri.parse('http://127.0.0.1:8000/generate-image/'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(requestBody),
       );
 
-      // Check response status
       if (response.statusCode == 200) {
-        // Parse the response
         final responseData = jsonDecode(response.body);
 
-        // Extract the base64 image data
         if (responseData.containsKey('image_b64')) {
-          final base64String = responseData['image_b64'];
-
-          // Handle data URL format if present (data:image/png;base64,...)
-          String cleanBase64 = base64String;
-          if (base64String.contains(',')) {
-            cleanBase64 = base64String.split(',').last;
+          String cleanBase64 = responseData['image_b64'];
+          if (cleanBase64.contains(',')) {
+            cleanBase64 = cleanBase64.split(',').last;
           }
 
-          // Decode base64 to bytes
           final bytes = base64.decode(cleanBase64);
 
           setState(() {
             _generatedImageBytes = bytes;
+            _hasImage = true;
+            _currentPrompt = prompt;
           });
 
-          // Optional: Show success message
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Text('Image generated successfully!'),
-              duration: const Duration(seconds: 2),
+            const SnackBar(
+              content: Text('Image generated successfully!'),
+              duration: Duration(seconds: 2),
             ),
           );
         } else {
-          // Show error if image_b64 is missing
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Text('No image data received from server'),
-              backgroundColor: Colors.red,
-              duration: const Duration(seconds: 3),
-            ),
-          );
+          _showError('No image data received from server');
         }
       } else {
-        // Show HTTP error
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error ${response.statusCode}: ${response.body}'),
-            backgroundColor: Colors.red,
-            duration: const Duration(seconds: 3),
-          ),
-        );
+        _showError('Error ${response.statusCode}: ${response.body}');
       }
     } catch (e) {
-      // Show general error
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error: $e'),
-          backgroundColor: Colors.red,
-          duration: const Duration(seconds: 3),
-        ),
-      );
+      _showError('Error: $e');
     } finally {
       setState(() {
         _isGenerating = false;
@@ -108,214 +81,513 @@ class _ImageGenerationScreenState extends State<ImageGenerationScreen> {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('AI Image Generation')),
-      body: Column(
-        children: [
-          // Image Display Section - Takes most of the screen
-          Expanded(child: _buildImageDisplay()),
-          // Prompt Input Section - Fixed at bottom
-          _buildPromptInputSection(),
-        ],
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red,
+        duration: const Duration(seconds: 3),
       ),
     );
   }
 
-  Widget _buildImageDisplay() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          // Header
-          const Text(
-            'AI Generated Image',
-            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 8),
-          const Text(
-            'Describe what you want to create',
-            style: TextStyle(fontSize: 16),
-          ),
-          const SizedBox(height: 32),
+  Future<void> _downloadImage() async {
+    if (_generatedImageBytes == null) return;
 
-          // Image Container
-          Expanded(
-            child: Container(
-              constraints: const BoxConstraints(maxWidth: 700, maxHeight: 700),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 16,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(16),
-                child: _isGenerating
-                    ? _buildLoadingState()
-                    : _buildImageContent(),
-              ),
-            ),
-          ),
-        ],
+    // TODO: Implement actual image download
+    // For mobile: use image_gallery_saver package
+    // For web: use image_downloader_web package
+    print('Download image functionality to be implemented');
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Download functionality requires additional setup'),
+        duration: Duration(seconds: 2),
       ),
     );
   }
 
-  Widget _buildImageContent() {
-    // Check if we have generated image bytes
-    if (_generatedImageBytes != null) {
-      // Display the generated image
-      return Image.memory(
-        _generatedImageBytes!,
-        fit: BoxFit.contain,
-        errorBuilder: (context, error, stackTrace) {
-          // If there's an error displaying the image, show placeholder
-          return _buildPlaceholder(
-            title: 'Failed to Display Image',
-            message: 'The generated image could not be displayed',
-          );
-        },
-      );
+  void _regenerateImage() {
+    if (_promptController.text.trim().isNotEmpty) {
+      _generateImage();
     } else {
-      // No image generated yet, show placeholder
-      return _buildPlaceholder();
+      _showError('Please enter a description first');
     }
   }
 
-  Widget _buildLoadingState() {
-    return Container(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const SizedBox(height: 24),
-          Text(
-            'Generating image...',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
-          ),
-          const SizedBox(height: 8),
-          Text('This may take a few moments', style: TextStyle(fontSize: 14)),
-        ],
-      ),
-    );
+  void _clearImage() {
+    setState(() {
+      _hasImage = false;
+      _generatedImageBytes = null;
+      _promptController.clear();
+    });
   }
 
-  Widget _buildPlaceholder({String? title, String? message}) {
-    return Container(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Column(
         children: [
+          // Navbar
           Container(
-            padding: const EdgeInsets.all(32),
-            decoration: BoxDecoration(shape: BoxShape.circle),
-            child: Icon(Icons.auto_awesome, size: 80),
-          ),
-          const SizedBox(height: 24),
-          Text(
-            title ?? 'No Image Generated Yet',
-            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 12),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 40),
-            child: Text(
-              message ??
-                  'Type a description below and click the send button to generate your AI image',
-              style: const TextStyle(fontSize: 14),
-              textAlign: TextAlign.center,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPromptInputSection() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        border: Border(top: BorderSide(color: Colors.grey.shade200)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 8,
-            offset: const Offset(0, -2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.grey.shade300),
+            decoration: BoxDecoration(
+              color: const Color(0xFF1A1A1A).withOpacity(0.95),
+              border: Border(
+                bottom: BorderSide(
+                  color: const Color(0xFF00FF88).withOpacity(0.2),
+                  width: 1,
+                ),
               ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: userPrompt,
-                      maxLines: null,
-                      textInputAction: TextInputAction.newline,
-                      decoration: const InputDecoration(
-                        hintText: 'Describe the image you want to generate...',
-                        border: InputBorder.none,
-                        contentPadding: EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 14,
-                        ),
-                      ),
-                      onSubmitted: (_) => generateImage(),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                // Logo
+                ShaderMask(
+                  shaderCallback: (bounds) => const LinearGradient(
+                    colors: [Color(0xFF00FF88), Color(0xFF00D4FF)],
+                  ).createShader(bounds),
+                  child: const Text(
+                    'Froggy AI',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
                     ),
                   ),
-                  if (_isGenerating)
-                    const Padding(
-                      padding: EdgeInsets.only(right: 8),
-                      child: SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+
+                // Page Title
+                const Text(
+                  'Image Generation',
+                  style: TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+
+                // Right side buttons
+                Row(
+                  children: [
+                    // Back to Dashboard Button
+                    ElevatedButton(
+                      onPressed: () {
+                        // TODO: Implement navigation to dashboard
+                        print('Navigate to dashboard');
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.white.withOpacity(0.05),
+                        foregroundColor: Colors.white,
+                        side: BorderSide(
+                          color: Colors.white.withOpacity(0.1),
+                          width: 1,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 12,
+                        ),
+                      ),
+                      child: const Row(
+                        children: [
+                          Icon(Icons.arrow_back, size: 16),
+                          SizedBox(width: 8),
+                          Text('Dashboard'),
+                        ],
                       ),
                     ),
+
+                    const SizedBox(width: 20),
+
+                    // User Avatar
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: const BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [Color(0xFF00FF88), Color(0xFF00D4FF)],
+                        ),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Center(
+                        child: Text(
+                          'ES',
+                          style: TextStyle(
+                            color: Colors.black,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+
+          // Main Content
+          Expanded(
+            child: Container(
+              padding: const EdgeInsets.all(32),
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [Color(0xFF0A0A0A), Color(0xFF1A1A1A)],
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Input Section
+                  Container(
+                    margin: const EdgeInsets.only(bottom: 32),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Description Input
+                        Expanded(
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.05),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: Colors.white.withOpacity(0.1),
+                                width: 1,
+                              ),
+                            ),
+                            child: TextField(
+                              controller: _promptController,
+                              maxLines: 4,
+                              minLines: 3,
+                              style: const TextStyle(color: Colors.white),
+                              decoration: const InputDecoration(
+                                hintText:
+                                    'Describe the image you want to generate... '
+                                    '(e.g., "A serene mountain landscape at sunset '
+                                    'with a crystal clear lake")',
+                                hintStyle: TextStyle(color: Color(0xFF666666)),
+                                border: InputBorder.none,
+                                contentPadding: EdgeInsets.all(20),
+                              ),
+                              onSubmitted: (value) {
+                                if (!_isGenerating) _generateImage();
+                              },
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(width: 16),
+
+                        // Generate Button
+                        SizedBox(
+                          height: 120,
+                          child: ElevatedButton(
+                            onPressed: _isGenerating ? null : _generateImage,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.transparent,
+                              foregroundColor: Colors.black,
+                              disabledBackgroundColor: Colors.grey,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 40,
+                                vertical: 16,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            child: Ink(
+                              decoration: BoxDecoration(
+                                gradient: _isGenerating
+                                    ? const LinearGradient(
+                                        colors: [Colors.grey, Colors.grey],
+                                      )
+                                    : const LinearGradient(
+                                        colors: [
+                                          Color(0xFF00FF88),
+                                          Color(0xFF00D4FF),
+                                        ],
+                                      ),
+                                borderRadius: BorderRadius.circular(12),
+                                boxShadow: _isGenerating
+                                    ? null
+                                    : [
+                                        BoxShadow(
+                                          color: const Color(
+                                            0xFF00FF88,
+                                          ).withOpacity(0.4),
+                                          blurRadius: 25,
+                                          offset: const Offset(0, 8),
+                                        ),
+                                      ],
+                              ),
+                              child: Container(
+                                constraints: const BoxConstraints(
+                                  minWidth: 120,
+                                  minHeight: 88,
+                                ),
+                                alignment: Alignment.center,
+                                child: Text(
+                                  _isGenerating ? 'Generating...' : 'Generate',
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // Display Section
+                  Expanded(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF1A1A1A).withOpacity(0.8),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: const Color(0xFF00FF88).withOpacity(0.2),
+                          width: 1,
+                        ),
+                      ),
+                      padding: const EdgeInsets.all(24),
+                      child: Center(
+                        child: _isGenerating
+                            ? _buildLoadingState()
+                            : _hasImage
+                            ? _buildImageContainer()
+                            : _buildPlaceholder(),
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
           ),
-          const SizedBox(width: 12),
-          // Send Button
-          Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [BoxShadow(blurRadius: 8, offset: const Offset(0, 2))],
-            ),
-            child: Material(
-              color: Colors.transparent,
-              borderRadius: BorderRadius.circular(12),
-              child: InkWell(
-                onTap: _isGenerating ? null : generateImage,
-                borderRadius: BorderRadius.circular(12),
-                child: Container(
-                  padding: const EdgeInsets.all(16),
-                  child: Icon(Icons.send_rounded, size: 24),
-                ),
-              ),
-            ),
-          ),
         ],
       ),
     );
+  }
+
+  // Placeholder Widget
+  Widget _buildPlaceholder() {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        const Text('🎨', style: TextStyle(fontSize: 80)),
+        const SizedBox(height: 24),
+        const Text(
+          'No Image Generated Yet',
+          style: TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF888888),
+          ),
+        ),
+        const SizedBox(height: 12),
+        const Text(
+          'Enter a description above and click Generate to create your image',
+          textAlign: TextAlign.center,
+          style: TextStyle(fontSize: 16, color: Color(0xFF666666)),
+        ),
+      ],
+    );
+  }
+
+  // Loading State Widget
+  Widget _buildLoadingState() {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        SizedBox(
+          width: 60,
+          height: 60,
+          child: CircularProgressIndicator(
+            valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF00FF88)),
+            strokeWidth: 4,
+            backgroundColor: const Color(0xFF00FF88).withOpacity(0.1),
+          ),
+        ),
+        const SizedBox(height: 24),
+        const Text(
+          'Generating Image...',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF00FF88),
+          ),
+        ),
+        const SizedBox(height: 12),
+        const Text(
+          'This may take a few moments',
+          style: TextStyle(fontSize: 14, color: Color(0xFF888888)),
+        ),
+      ],
+    );
+  }
+
+  // Image Container Widget
+  Widget _buildImageContainer() {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        // Generated Image
+        if (_generatedImageBytes != null)
+          Container(
+            constraints: const BoxConstraints(maxWidth: 800, maxHeight: 600),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(15),
+              border: Border.all(
+                color: const Color(0xFF00FF88).withOpacity(0.3),
+                width: 1,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.5),
+                  blurRadius: 40,
+                  offset: const Offset(0, 10),
+                ),
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(15),
+              child: Image.memory(
+                _generatedImageBytes!,
+                fit: BoxFit.contain,
+
+                errorBuilder: (context, error, stackTrace) {
+                  return const Center(
+                    child: Text(
+                      'Failed to load image',
+                      style: TextStyle(color: Colors.red),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+
+        const SizedBox(height: 24),
+
+        // Image Prompt
+        if (_currentPrompt.isNotEmpty)
+          SizedBox(
+            width: 800,
+            child: Text(
+              'Prompt: $_currentPrompt',
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 16, color: Color(0xFF888888)),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+
+        const SizedBox(height: 24),
+
+        // Action Buttons
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // Download Button
+            ElevatedButton(
+              onPressed: _downloadImage,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.white.withOpacity(0.05),
+                foregroundColor: Colors.white,
+                side: BorderSide(
+                  color: Colors.white.withOpacity(0.1),
+                  width: 1,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 16,
+                ),
+              ),
+              child: const Row(
+                children: [
+                  Icon(Icons.download, size: 18),
+                  SizedBox(width: 8),
+                  Text('Download'),
+                ],
+              ),
+            ),
+
+            const SizedBox(width: 16),
+
+            // Regenerate Button
+            ElevatedButton(
+              onPressed: _regenerateImage,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.white.withOpacity(0.05),
+                foregroundColor: Colors.white,
+                side: BorderSide(
+                  color: Colors.white.withOpacity(0.1),
+                  width: 1,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 16,
+                ),
+              ),
+              child: const Row(
+                children: [
+                  Icon(Icons.refresh, size: 18),
+                  SizedBox(width: 8),
+                  Text('Regenerate'),
+                ],
+              ),
+            ),
+
+            const SizedBox(width: 16),
+
+            // Clear Button
+            ElevatedButton(
+              onPressed: _clearImage,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.white.withOpacity(0.05),
+                foregroundColor: Colors.white,
+                side: BorderSide(
+                  color: Colors.white.withOpacity(0.1),
+                  width: 1,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 16,
+                ),
+              ),
+              child: const Row(
+                children: [
+                  Icon(Icons.delete, size: 18),
+                  SizedBox(width: 8),
+                  Text('Clear'),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  @override
+  void dispose() {
+    _promptController.dispose();
+    super.dispose();
   }
 }

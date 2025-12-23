@@ -1,4 +1,4 @@
-import 'package:documind/features/pdf_chat/pdf_chat_screen.dart';
+import 'package:documind/features/image_generation/image_generation_screen.dart';
 import 'package:documind/firebase_options.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -18,7 +18,7 @@ class Documind extends StatelessWidget {
     return MaterialApp(
       title: 'DocuMind AI',
       theme: ThemeData.dark(),
-      home: PDFChatScreen(),
+      home: ImageGenerationPage(),
       debugShowCheckedModeBanner: false,
       /*
       // CORRECT responsive framework implementation
