@@ -1,25 +1,76 @@
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
-import 'dart:io';
+import 'package:google_generative_ai/google_generative_ai.dart';
+import 'dart:convert';
 
-void main() {
-  runApp(const MyApp());
+// Gemini API Service
+class GeminiService {
+  static const String _systemPrompt = '''
+You are **DocuBot**, a smart, friendly AI assistant that helps users understand and explore the content of an uploaded file.
+
+Use the uploaded file's content as your primary knowledge source to answer the user's questions clearly and accurately.
+
+If the question is completely unrelated to the file, respond kindly:
+"The uploaded file doesn't contain any information about that topic, but I can still help you understand it if you'd like."
+''';
+
+  static const String apiKey = 'AIzaSyC-WrzKEAmIETrxZnmyjF7iDJJNJ5RKEGE';
+
+  static Future<String> getResponse(
+    String userPrompt,
+    String? fileContent,
+    String? fileName,
+  ) async {
+    try {
+      final model = GenerativeModel(
+        model: 'gemini-2.0-flash-exp',
+        apiKey: apiKey,
+        systemInstruction: Content.text(_systemPrompt),
+      );
+
+      final prompt =
+          '''
+Here is the content of the uploaded file named "$fileName":
+---
+$fileContent
+---
+
+User's question:
+"$userPrompt"
+''';
+
+      final response = await model.generateContent([Content.text(prompt)]);
+      return response.text ?? "I didn't get a response. Please try again.";
+    } catch (e) {
+      return "Service is temporarily unavailable. Please try again shortly. Error: ${e.toString()}";
+    }
+  }
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Froggy AI',
-      theme: ThemeData.dark().copyWith(
-        scaffoldBackgroundColor: const Color(0xFF0A0A0A),
-        primaryColor: const Color(0xFF00D9C0),
-      ),
-      home: const PDFChatScreen(),
-      debugShowCheckedModeBanner: false,
+// File Helper
+class FileHelper {
+  static Future<Map<String, dynamic>?> pickFile() async {
+    FilePickerResult? result = await FilePicker.platform.pickFiles(
+      allowedExtensions: ['txt', 'pdf'],
+      type: FileType.custom,
     );
+
+    if (result == null) return null;
+
+    final file = result.files.first;
+    String? content;
+
+    if (file.extension == "txt" && file.bytes != null) {
+      content = utf8.decode(file.bytes!);
+    } else if (file.extension == "pdf") {
+      content = "[PDF content would be extracted here]";
+    }
+
+    if (content != null && content.isNotEmpty) {
+      return {'content': content, 'name': file.name, 'size': file.size};
+    }
+
+    return null;
   }
 }
 
@@ -32,8 +83,13 @@ class PDFChatScreen extends StatefulWidget {
 
 class _PDFChatScreenState extends State<PDFChatScreen> {
   final TextEditingController _messageController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
   final List<ChatMessage> _messages = [];
-  File? _uploadedFile;
+
+  String? _fileContent;
+  String? _fileName;
+  int? _fileSize;
+  bool _isLoading = false;
 
   @override
   void initState() {
@@ -49,43 +105,75 @@ class _PDFChatScreenState extends State<PDFChatScreen> {
   }
 
   Future<void> _pickFile() async {
-    FilePickerResult? result = await FilePicker.platform.pickFiles(
-      type: FileType.custom,
-      allowedExtensions: ['pdf'],
-    );
+    final fileData = await FileHelper.pickFile();
 
-    if (result != null) {
+    if (fileData != null) {
       setState(() {
-        _uploadedFile = File(result.files.single.path!);
+        _fileContent = fileData['content'];
+        _fileName = fileData['name'];
+        _fileSize = fileData['size'];
       });
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('File uploaded: ${result.files.single.name}'),
+          content: Text('File uploaded: $_fileName'),
           backgroundColor: const Color(0xFF00D9C0),
+          duration: const Duration(seconds: 2),
         ),
       );
+
+      // Add a welcome message about the uploaded file
+      setState(() {
+        _messages.add(
+          ChatMessage(
+            text:
+                "Great! I've loaded your file '$_fileName'. Feel free to ask me anything about it!",
+            isUser: false,
+          ),
+        );
+      });
+
+      _scrollToBottom();
     }
   }
 
-  void _sendMessage() {
+  void _sendMessage() async {
     if (_messageController.text.trim().isEmpty) return;
 
-    setState(() {
-      _messages.add(ChatMessage(text: _messageController.text, isUser: true));
-      _messageController.clear();
+    final userMessage = _messageController.text.trim();
 
-      // Simulate bot response
-      Future.delayed(const Duration(milliseconds: 500), () {
-        setState(() {
-          _messages.add(
-            ChatMessage(
-              text:
-                  "I've received your question. Please note this is a demo - in a real app, I would analyze your PDF and provide relevant answers.",
-              isUser: false,
-            ),
-          );
-        });
-      });
+    setState(() {
+      _messages.add(ChatMessage(text: userMessage, isUser: true));
+      _isLoading = true;
+    });
+
+    _messageController.clear();
+    _scrollToBottom();
+
+    // Get AI response from Gemini
+    final botResponse = await GeminiService.getResponse(
+      userMessage,
+      _fileContent,
+      _fileName,
+    );
+
+    setState(() {
+      _messages.add(ChatMessage(text: botResponse, isUser: false));
+      _isLoading = false;
+    });
+
+    _scrollToBottom();
+  }
+
+  void _scrollToBottom() {
+    Future.delayed(const Duration(milliseconds: 100), () {
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
     });
   }
 
@@ -179,9 +267,13 @@ class _PDFChatScreenState extends State<PDFChatScreen> {
                     color: Colors.grey.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: const Icon(
-                    Icons.insert_drive_file_outlined,
-                    color: Colors.white,
+                  child: Icon(
+                    _fileName != null
+                        ? Icons.check_circle
+                        : Icons.insert_drive_file_outlined,
+                    color: _fileName != null
+                        ? const Color(0xFF00D9C0)
+                        : Colors.white,
                     size: 32,
                   ),
                 ),
@@ -191,19 +283,18 @@ class _PDFChatScreenState extends State<PDFChatScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        _uploadedFile != null
-                            ? _uploadedFile!.path.split('/').last
-                            : 'Upload PDF',
+                        _fileName ?? 'Upload PDF',
                         style: const TextStyle(
                           color: Color(0xFF00D9C0),
                           fontSize: 18,
                           fontWeight: FontWeight.w600,
                         ),
+                        overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        _uploadedFile != null
-                            ? 'File uploaded successfully'
+                        _fileName != null
+                            ? 'File uploaded successfully${_fileSize != null ? " • ${(_fileSize! / 1024).toStringAsFixed(1)} KB" : ""}'
                             : 'Click to browse or drag & drop',
                         style: TextStyle(
                           color: Colors.grey.shade400,
@@ -226,9 +317,12 @@ class _PDFChatScreenState extends State<PDFChatScreen> {
                       borderRadius: BorderRadius.circular(8),
                     ),
                   ),
-                  child: const Text(
-                    'Choose File',
-                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+                  child: Text(
+                    _fileName != null ? 'Change File' : 'Choose File',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 16,
+                    ),
                   ),
                 ),
               ],
@@ -238,9 +332,64 @@ class _PDFChatScreenState extends State<PDFChatScreen> {
           // Chat Messages
           Expanded(
             child: ListView.builder(
+              controller: _scrollController,
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-              itemCount: _messages.length,
+              itemCount: _messages.length + (_isLoading ? 1 : 0),
               itemBuilder: (context, index) {
+                if (index == _messages.length && _isLoading) {
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 16),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF1A1A1A),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Icon(
+                            Icons.android,
+                            color: Color(0xFF00D9C0),
+                            size: 24,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF1A1A1A),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    const Color(0xFF00D9C0),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              const Text(
+                                'Thinking...',
+                                style: TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: 15,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }
                 return ChatBubble(message: _messages[index]);
               },
             ),
@@ -299,6 +448,7 @@ class _PDFChatScreenState extends State<PDFChatScreen> {
   @override
   void dispose() {
     _messageController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 }
