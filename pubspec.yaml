@@ -8,6 +8,7 @@ environment:
 
 dependencies:
   cached_network_image: ^3.4.1
+  clipboard: ^3.0.8
   doc_text_extractor: ^1.0.0
   file_picker: ^10.3.3
   firebase_auth: ^6.1.3
