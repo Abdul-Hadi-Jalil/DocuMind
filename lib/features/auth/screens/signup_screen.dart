@@ -1,11 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:documind/features/auth/screens/login_screen.dart';
-import 'package:documind/features/dashboard/screens/dashboard_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class SignUpPage extends StatefulWidget {
-  const SignUpPage({super.key});
+  final VoidCallback showLoginScreen;
+  const SignUpPage({super.key, required this.showLoginScreen});
 
   @override
   State<SignUpPage> createState() => _SignUpPageState();
@@ -273,17 +272,7 @@ class _SignUpPageState extends State<SignUpPage> {
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
-                          onPressed: () {
-                            signUp();
-
-                            if (signInSuccess) {
-                              Navigator.pushNamedAndRemoveUntil(
-                                context,
-                                "/",
-                                (route) => false,
-                              );
-                            }
-                          },
+                          onPressed: signUp,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.transparent,
                             foregroundColor: Colors.black,
@@ -332,14 +321,7 @@ class _SignUpPageState extends State<SignUpPage> {
                             ),
                           ),
                           InkWell(
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => LoginPage(),
-                                ),
-                              );
-                            },
+                            onTap: widget.showLoginScreen,
                             child: const Text(
                               'Login',
                               style: TextStyle(

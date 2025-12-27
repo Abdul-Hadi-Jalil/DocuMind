@@ -1,9 +1,9 @@
-import 'package:documind/features/auth/screens/signup_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+  final VoidCallback showRegisterScreen;
+  const LoginPage({super.key, required this.showRegisterScreen});
 
   @override
   State<LoginPage> createState() => _LoginPageState();
@@ -244,15 +244,7 @@ class _LoginPageState extends State<LoginPage> {
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
-                          onPressed: () {
-                            login();
-
-                            Navigator.pushNamedAndRemoveUntil(
-                              context,
-                              '/',
-                              (route) => false,
-                            );
-                          },
+                          onPressed: login,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.transparent,
                             foregroundColor: Colors.black,
@@ -301,14 +293,7 @@ class _LoginPageState extends State<LoginPage> {
                             ),
                           ),
                           InkWell(
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => SignUpPage(),
-                                ),
-                              );
-                            },
+                            onTap: widget.showRegisterScreen,
                             child: const Text(
                               'Sign up',
                               style: TextStyle(

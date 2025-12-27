@@ -1,8 +1,8 @@
-import 'package:documind/features/auth/screens/login_screen.dart';
 import 'package:flutter/material.dart';
 
 class LandingScreen extends StatefulWidget {
-  const LandingScreen({super.key});
+  final VoidCallback showLoginScreen;
+  const LandingScreen({super.key, required this.showLoginScreen});
 
   @override
   State<LandingScreen> createState() => _LandingScreenState();
@@ -68,12 +68,7 @@ class _LandingScreenState extends State<LandingScreen> {
 
                     // Sign In Button
                     ElevatedButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => LoginPage()),
-                        );
-                      },
+                      onPressed: widget.showLoginScreen,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.transparent,
                         foregroundColor: Colors.black,
@@ -208,14 +203,7 @@ class _LandingScreenState extends State<LandingScreen> {
 
                           // Get Started Button
                           ElevatedButton(
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => LoginPage(),
-                                ),
-                              );
-                            },
+                            onPressed: widget.showLoginScreen,
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.transparent,
                               foregroundColor: Colors.black,

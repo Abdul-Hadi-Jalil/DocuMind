@@ -1,4 +1,4 @@
-import 'package:documind/features/auth/screens/landing_screen.dart';
+import 'package:documind/features/auth/screens/auth_screen.dart';
 import 'package:documind/features/dashboard/screens/dashboard_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -20,7 +20,7 @@ class _AppState extends State<App> {
           if (snapshot.hasData) {
             return DashboardScreen();
           } else {
-            return LandingScreen();
+            return AuthScreen();
           }
         },
       ),
