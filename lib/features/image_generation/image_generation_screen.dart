@@ -94,32 +94,6 @@ class _ImageGenerationPageState extends State<ImageGenerationPage> {
     );
   }
 
-  Future<void> _downloadImage() async {
-    if (_generatedImageBytes == null) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Download functionality requires additional setup'),
-        duration: Duration(seconds: 2),
-      ),
-    );
-  }
-
-  void _regenerateImage() {
-    if (_promptController.text.trim().isNotEmpty) {
-      _generateImage();
-    } else {
-      _showError('Please enter a description first');
-    }
-  }
-
-  void _clearImage() {
-    setState(() {
-      _hasImage = false;
-      _generatedImageBytes = null;
-      _promptController.clear();
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -431,155 +405,94 @@ class _ImageGenerationPageState extends State<ImageGenerationPage> {
     );
   }
 
-  // Image Container Widget
   Widget _buildImageContainer() {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        // Generated Image
-        if (_generatedImageBytes != null)
-          Container(
-            constraints: const BoxConstraints(maxWidth: 800, maxHeight: 600),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(15),
-              border: Border.all(
-                color: const Color(0xFF00FF88).withOpacity(0.3),
-                width: 1,
+    return Expanded(
+      // ADD THIS
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          // Generated Image
+          if (_generatedImageBytes != null)
+            Expanded(
+              // ADD THIS
+              child: Container(
+                margin: const EdgeInsets.all(16), // ADD THIS
+                constraints: const BoxConstraints(
+                  maxWidth: 800,
+                  maxHeight: 600,
+                ),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(15),
+                  border: Border.all(
+                    color: const Color(0xFF00FF88).withOpacity(0.3),
+                    width: 1,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.5),
+                      blurRadius: 40,
+                      offset: const Offset(0, 10),
+                    ),
+                  ],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(15),
+                  child: InteractiveViewer(
+                    // ADD THIS for zoom/pan
+                    minScale: 0.5,
+                    maxScale: 4.0,
+                    child: Image.memory(
+                      _generatedImageBytes!,
+                      fit: BoxFit.contain,
+                      errorBuilder: (context, error, stackTrace) {
+                        return const Center(
+                          child: Text(
+                            'Failed to load image',
+                            style: TextStyle(color: Colors.red),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
               ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.5),
-                  blurRadius: 40,
-                  offset: const Offset(0, 10),
+            ),
+
+          // Image Prompt and Action Buttons
+          Container(
+            // WRAP THIS SECTION
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              children: [
+                if (_currentPrompt.isNotEmpty)
+                  SizedBox(
+                    width: 800,
+                    child: Text(
+                      'Prompt: $_currentPrompt',
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        color: Color(0xFF888888),
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+
+                const SizedBox(height: 24),
+
+                // Action Buttons (same as before)
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // ... action buttons code
+                  ],
                 ),
               ],
             ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(15),
-              child: Image.memory(
-                _generatedImageBytes!,
-                fit: BoxFit.contain,
-
-                errorBuilder: (context, error, stackTrace) {
-                  return const Center(
-                    child: Text(
-                      'Failed to load image',
-                      style: TextStyle(color: Colors.red),
-                    ),
-                  );
-                },
-              ),
-            ),
           ),
-
-        const SizedBox(height: 24),
-
-        // Image Prompt
-        if (_currentPrompt.isNotEmpty)
-          SizedBox(
-            width: 800,
-            child: Text(
-              'Prompt: $_currentPrompt',
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 16, color: Color(0xFF888888)),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-
-        const SizedBox(height: 24),
-
-        // Action Buttons
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // Download Button
-            ElevatedButton(
-              onPressed: _downloadImage,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white.withOpacity(0.05),
-                foregroundColor: Colors.white,
-                side: BorderSide(
-                  color: Colors.white.withOpacity(0.1),
-                  width: 1,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 16,
-                ),
-              ),
-              child: const Row(
-                children: [
-                  Icon(Icons.download, size: 18),
-                  SizedBox(width: 8),
-                  Text('Download'),
-                ],
-              ),
-            ),
-
-            const SizedBox(width: 16),
-
-            // Regenerate Button
-            ElevatedButton(
-              onPressed: _regenerateImage,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white.withOpacity(0.05),
-                foregroundColor: Colors.white,
-                side: BorderSide(
-                  color: Colors.white.withOpacity(0.1),
-                  width: 1,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 16,
-                ),
-              ),
-              child: const Row(
-                children: [
-                  Icon(Icons.refresh, size: 18),
-                  SizedBox(width: 8),
-                  Text('Regenerate'),
-                ],
-              ),
-            ),
-
-            const SizedBox(width: 16),
-
-            // Clear Button
-            ElevatedButton(
-              onPressed: _clearImage,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white.withOpacity(0.05),
-                foregroundColor: Colors.white,
-                side: BorderSide(
-                  color: Colors.white.withOpacity(0.1),
-                  width: 1,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 16,
-                ),
-              ),
-              child: const Row(
-                children: [
-                  Icon(Icons.delete, size: 18),
-                  SizedBox(width: 8),
-                  Text('Clear'),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ],
+        ],
+      ),
     );
   }
 

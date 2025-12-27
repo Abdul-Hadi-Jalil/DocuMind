@@ -16,7 +16,7 @@ If the question is completely unrelated to the file, respond kindly:
 "The uploaded file doesn't contain any information about that topic, but I can still help you understand it if you'd like."
 ''';
 
-  static const String apiKey = 'AIzaSyC-WrzKEAmIETrxZnmyjF7iDJJNJ5RKEGE';
+  static const String apiKey = 'AIzaSyDFPD6cuZWgjFlvpa-RNtmILqqqcxZFjNY';
 
   static Future<String> getResponse(
     String userPrompt,
@@ -25,7 +25,7 @@ If the question is completely unrelated to the file, respond kindly:
   ) async {
     try {
       final model = GenerativeModel(
-        model: 'gemini-2.0-flash-exp',
+        model: 'gemini-2.5-flash',
         apiKey: apiKey,
         systemInstruction: Content.text(_systemPrompt),
       );

@@ -73,7 +73,7 @@ class _OcrScreenState extends State<OcrScreen> {
       }
 
       // Step 3: Convert image to bytes
-      final bytes = await pickedFile.readAsBytes();
+      final bytes = await selectedImage!.readAsBytes();
       setState(() {
         imageBytes = bytes;
         isLoading = false;
@@ -124,42 +124,26 @@ class _OcrScreenState extends State<OcrScreen> {
 
           // Handle different response statuses
           if (response.statusCode == 200) {
-            // Success: Parse the response
-            var responseData = await response.stream.bytesToString();
-            var jsonResponse = jsonDecode(responseData);
-
-            // Convert JSON to OcrResult object
-            OcrResult result = OcrResult.fromJson(jsonResponse);
-
-            // Update UI with OCR result
-            setState(() {
-              backendResult = result;
-              isUploading = false;
-            });
-
-            // Show success message
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: const Text('✅ Text extracted successfully!'),
-                  backgroundColor: const Color(0xFF00ff88),
-                  duration: const Duration(seconds: 2),
-                  action: SnackBarAction(
-                    label: 'COPY',
-                    textColor: Colors.black,
-                    onPressed: () {
-                      _copyToClipboard(result.extractedText ?? '');
-                    },
-                  ),
+                const SnackBar(
+                  content: Text('Upload successful!'),
+                  duration: Duration(seconds: 1),
                 ),
               );
-            }
+              // display the extracted text
+              var responseData = await response.stream.bytesToString();
+              var jsonResponse = jsonDecode(responseData);
 
-            // Debug print the results
-            debugPrint("Content Type: ${result.contentType}");
-            debugPrint(
-              "Extracted Text Length: ${result.extractedText?.length ?? 0} characters",
-            );
+              OcrResult result = OcrResult.fromJson(jsonResponse);
+
+              debugPrint("Content Type: ${result.contentType}");
+              debugPrint("Extracted Text: ${result.extractedText}");
+
+              setState(() {
+                backendResult = result;
+              });
+            }
           } else if (response.statusCode == 422) {
             // Validation error (common: wrong field name or file format)
             setState(() {
