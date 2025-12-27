@@ -19,6 +19,7 @@ dependencies:
     sdk: flutter
   flutter_chat_core: ^2.8.0
   flutter_chat_ui: ^2.9.1
+  flutter_dotenv: ^6.0.0
   flutter_markdown: ^0.7.7+1
   flutter_staggered_animations: ^1.1.1
   fluttertoast: ^9.0.0
@@ -48,4 +49,4 @@ flutter:
   uses-material-design: true
   
   assets:
-    - assets/images/pakistani_boy_riding_bike.jpg
+    - .env

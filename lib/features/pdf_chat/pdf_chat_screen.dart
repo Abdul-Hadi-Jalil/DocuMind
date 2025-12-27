@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
 import 'dart:convert';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 // Gemini API Service
 class GeminiService {
@@ -16,7 +17,7 @@ If the question is completely unrelated to the file, respond kindly:
 "The uploaded file doesn't contain any information about that topic, but I can still help you understand it if you'd like."
 ''';
 
-  static const String apiKey = 'AIzaSyDFPD6cuZWgjFlvpa-RNtmILqqqcxZFjNY';
+  static final String apiKey = dotenv.env["API_KEY"] ?? "No key found";
 
   static Future<String> getResponse(
     String userPrompt,
