@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use, duplicate_ignore
+
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
@@ -60,6 +62,7 @@ class _ImageGenerationPageState extends State<ImageGenerationPage> {
             _currentPrompt = prompt;
           });
 
+          // ignore: use_build_context_synchronously
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Image generated successfully!'),
@@ -93,11 +96,6 @@ class _ImageGenerationPageState extends State<ImageGenerationPage> {
 
   Future<void> _downloadImage() async {
     if (_generatedImageBytes == null) return;
-
-    // TODO: Implement actual image download
-    // For mobile: use image_gallery_saver package
-    // For web: use image_downloader_web package
-    print('Download image functionality to be implemented');
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('Download functionality requires additional setup'),
@@ -173,13 +171,13 @@ class _ImageGenerationPageState extends State<ImageGenerationPage> {
                     // Back to Dashboard Button
                     ElevatedButton(
                       onPressed: () {
-                        // TODO: Implement navigation to dashboard
-                        print('Navigate to dashboard');
+                        Navigator.pop(context);
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.white.withOpacity(0.05),
                         foregroundColor: Colors.white,
                         side: BorderSide(
+                          // ignore: deprecated_member_use
                           color: Colors.white.withOpacity(0.1),
                           width: 1,
                         ),

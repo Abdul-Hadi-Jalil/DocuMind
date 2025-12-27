@@ -1,4 +1,6 @@
-import 'package:documind/features/auth/screens/landing_screen.dart';
+import 'package:documind/features/image_generation/image_generation_screen.dart';
+import 'package:documind/features/ocr/ocr_screen.dart';
+import 'package:documind/features/pdf_chat/pdf_chat_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -238,7 +240,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   mainAxisSpacing: 24,
                                   childAspectRatio: childAspectRatio,
                                 ),
-                            itemCount: 4,
+                            itemCount: 3,
                             itemBuilder: (context, index) {
                               final modules = [
                                 {
@@ -251,8 +253,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   'color1': const Color(0xFFFF6B6B),
                                   'color2': const Color(0xFFFF4757),
                                   'onTap': () {
-                                    // TODO: Open PDF module
-                                    print('PDF module opened');
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => PDFChatScreen(),
+                                      ),
+                                    );
                                   },
                                 },
                                 {
@@ -265,12 +271,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   'color1': const Color(0xFF4ECDC4),
                                   'color2': const Color(0xFF44A08D),
                                   'onTap': () {
-                                    // TODO: Open Image Generation module
-                                    print('Image Generation module opened');
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            ImageGenerationPage(),
+                                      ),
+                                    );
                                   },
                                 },
                                 {
-                                  'icon': '👁️',
+                                  'icon': '📸',
                                   'title': 'Smart OCR',
                                   'description':
                                       'Extract text from images and '
@@ -280,20 +291,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   'color1': const Color(0xFFFFD93D),
                                   'color2': const Color(0xFFFFAA00),
                                   'onTap': () {
-                                    // TODO: Open OCR module
-                                    print('OCR module opened');
-                                  },
-                                },
-                                {
-                                  'icon': '✍️',
-                                  'title': 'SignatureFlow',
-                                  'description':
-                                      'Generate multiple signatures from a name.',
-                                  'color1': const Color(0xFFA29BFE),
-                                  'color2': const Color(0xFF6C5CE7),
-                                  'onTap': () {
-                                    // TODO: Open Signature module
-                                    print('Signature module opened');
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => OcrScreen(),
+                                      ),
+                                    );
                                   },
                                 },
                               ];
@@ -301,24 +304,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               final module = modules[index];
 
                               return MouseRegion(
-                                onEnter: (_) => setState(() {
-                                  // TODO: Add hover animation
-                                }),
+                                onEnter: (_) => setState(() {}),
                                 child: GestureDetector(
                                   onTap: module['onTap'] as VoidCallback,
                                   child: Container(
                                     decoration: BoxDecoration(
                                       color: const Color(
                                         0xFF1A1A1A,
+                                        // ignore: deprecated_member_use
                                       ).withOpacity(0.8),
                                       borderRadius: BorderRadius.circular(20),
                                       border: Border.all(
                                         color: const Color(
                                           0xFF00FF88,
+                                          // ignore: deprecated_member_use
                                         ).withOpacity(0.2),
                                       ),
                                       boxShadow: [
                                         BoxShadow(
+                                          // ignore: deprecated_member_use
                                           color: Colors.black.withOpacity(0.3),
                                           blurRadius: 20,
                                           offset: const Offset(0, 10),
@@ -339,6 +343,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                                   Colors.transparent,
                                                   const Color(
                                                     0xFF00FF88,
+                                                    // ignore: deprecated_member_use
                                                   ).withOpacity(0.1),
                                                 ],
                                               ),
@@ -369,6 +374,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                                       color:
                                                           (module['color2']
                                                                   as Color)
+                                                              // ignore: deprecated_member_use
                                                               .withOpacity(0.4),
                                                       blurRadius: 20,
                                                       offset: const Offset(

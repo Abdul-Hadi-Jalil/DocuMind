@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
@@ -292,59 +291,113 @@ class _OcrScreenState extends State<OcrScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Row(
-          children: [
-            const Icon(Icons.remove_red_eye, color: Color(0xFF00ff88)),
-            const SizedBox(width: 10),
-            Text(
-              'Froggy AI OCR',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
-            ),
-          ],
-        ),
-        backgroundColor: const Color(0xFF1a1a1a),
-        elevation: 0,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.info_outline, color: Color(0xFF00ff88)),
-            onPressed: () {
-              showDialog(
-                context: context,
-                builder: (context) => AlertDialog(
-                  backgroundColor: const Color(0xFF1a1a1a),
-                  title: const Text(
-                    'How to Use',
-                    style: TextStyle(color: Color(0xFF00ff88)),
-                  ),
-                  content: const Text(
-                    '1. Tap "Upload Image" button\n'
-                    '2. Select an image from gallery\n'
-                    '3. Image will be sent to backend\n'
-                    '4. View extracted text\n'
-                    '5. Copy text to clipboard',
-                    style: TextStyle(color: Colors.white70),
-                  ),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text(
-                        'OK',
-                        style: TextStyle(color: Color(0xFF00ff88)),
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
-        ],
-      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            // Navbar
+            Container(
+              decoration: BoxDecoration(
+                color: const Color(0xFF1A1A1A).withOpacity(0.95),
+                border: Border(
+                  bottom: BorderSide(
+                    color: const Color(0xFF00FF88).withOpacity(0.2),
+                    width: 1,
+                  ),
+                ),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  // Logo
+                  ShaderMask(
+                    shaderCallback: (bounds) => const LinearGradient(
+                      colors: [Color(0xFF00FF88), Color(0xFF00D4FF)],
+                    ).createShader(bounds),
+                    child: const Text(
+                      'Froggy AI',
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+
+                  // Page Title
+                  const Text(
+                    'OCR',
+                    style: TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+
+                  // Right side buttons
+                  Row(
+                    children: [
+                      // Back to Dashboard Button
+                      ElevatedButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+                        },
+                        style: ElevatedButton.styleFrom(
+                          // ignore: deprecated_member_use
+                          backgroundColor: Colors.white.withOpacity(0.05),
+                          foregroundColor: Colors.white,
+                          side: BorderSide(
+                            // ignore: deprecated_member_use
+                            color: Colors.white.withOpacity(0.1),
+                            width: 1,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 12,
+                          ),
+                        ),
+                        child: const Row(
+                          children: [
+                            Icon(Icons.arrow_back, size: 16),
+                            SizedBox(width: 8),
+                            Text('Dashboard'),
+                          ],
+                        ),
+                      ),
+
+                      const SizedBox(width: 20),
+
+                      // User Avatar
+                      Container(
+                        width: 40,
+                        height: 40,
+                        decoration: const BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [Color(0xFF00FF88), Color(0xFF00D4FF)],
+                          ),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Center(
+                          child: Text(
+                            'ES',
+                            style: TextStyle(
+                              color: Colors.black,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+
             // Image Upload Section
             Expanded(
               flex: 2,
@@ -496,6 +549,7 @@ class _OcrScreenState extends State<OcrScreen> {
             top: 10,
             right: 10,
             child: FloatingActionButton.small(
+              // ignore: deprecated_member_use
               backgroundColor: Colors.black.withOpacity(0.7),
               foregroundColor: Colors.white,
               onPressed: _removeImage,
@@ -512,6 +566,7 @@ class _OcrScreenState extends State<OcrScreen> {
               child: Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
+                  // ignore: deprecated_member_use
                   color: Colors.black.withOpacity(0.7),
                   borderRadius: BorderRadius.circular(10),
                 ),
@@ -653,6 +708,7 @@ class _OcrScreenState extends State<OcrScreen> {
     // Show extracted text
     return Container(
       decoration: BoxDecoration(
+        // ignore: deprecated_member_use
         color: Colors.black.withOpacity(0.3),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Colors.white12),
@@ -685,8 +741,10 @@ class _OcrScreenState extends State<OcrScreen> {
       margin: const EdgeInsets.only(top: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
+        // ignore: deprecated_member_use
         color: const Color(0xFF00ff88).withOpacity(0.1),
         borderRadius: BorderRadius.circular(12),
+        // ignore: deprecated_member_use
         border: Border.all(color: const Color(0xFF00ff88).withOpacity(0.2)),
       ),
       child: Row(

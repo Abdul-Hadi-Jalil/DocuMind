@@ -314,7 +314,7 @@ class _LandingScreenState extends State<LandingScreen> {
                                 mainAxisSpacing: 24,
                                 childAspectRatio: childAspectRatio,
                               ),
-                          itemCount: 4,
+                          itemCount: 3,
                           itemBuilder: (context, index) {
                             final features = [
                               {
@@ -340,7 +340,7 @@ class _LandingScreenState extends State<LandingScreen> {
                                 'color2': const Color(0xFF44A08D),
                               },
                               {
-                                'icon': '👁️',
+                                'icon': '📸',
                                 'title': 'Smart OCR',
                                 'description':
                                     'Extract text from any image or document '
@@ -349,17 +349,6 @@ class _LandingScreenState extends State<LandingScreen> {
                                     'text instantly',
                                 'color1': const Color(0xFFFFD93D),
                                 'color2': const Color(0xFFFFAA00),
-                              },
-                              {
-                                'icon': '✍️',
-                                'title': 'SignatureFlow',
-                                'description':
-                                    'Streamline your document signing '
-                                    'workflow. Send, track, and manage '
-                                    'digital signatures with enterprise-grade '
-                                    'security and compliance',
-                                'color1': const Color(0xFFA29BFE),
-                                'color2': const Color(0xFF6C5CE7),
                               },
                             ];
 

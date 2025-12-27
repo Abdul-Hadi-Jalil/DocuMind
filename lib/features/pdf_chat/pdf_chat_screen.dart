@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
@@ -182,67 +184,103 @@ class _PDFChatScreenState extends State<PDFChatScreen> {
     return Scaffold(
       body: Column(
         children: [
-          // Header
+          // Navbar
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
             decoration: BoxDecoration(
-              color: const Color(0xFF0A0A0A),
+              color: const Color(0xFF1A1A1A).withOpacity(0.95),
               border: Border(
                 bottom: BorderSide(
-                  color: Colors.grey.withOpacity(0.2),
+                  color: const Color(0xFF00FF88).withOpacity(0.2),
                   width: 1,
                 ),
               ),
             ),
-            child: SafeArea(
-              bottom: false,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
+            padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                // Logo
+                ShaderMask(
+                  shaderCallback: (bounds) => const LinearGradient(
+                    colors: [Color(0xFF00FF88), Color(0xFF00D4FF)],
+                  ).createShader(bounds),
+                  child: const Text(
                     'Froggy AI',
                     style: TextStyle(
-                      color: Color(0xFF00D9C0),
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const Spacer(),
-                  const Text(
-                    'Chat with PDF',
-                    style: TextStyle(
                       color: Colors.white,
-                      fontSize: 24,
-                      fontWeight: FontWeight.w600,
                     ),
                   ),
-                  const Spacer(),
-                  Row(
-                    children: [
-                      TextButton.icon(
-                        onPressed: () {},
-                        icon: const Icon(Icons.arrow_back, color: Colors.grey),
-                        label: const Text(
-                          'Dashboard',
-                          style: TextStyle(color: Colors.grey),
+                ),
+
+                // Page Title
+                const Text(
+                  'Chat with PDF',
+                  style: TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+
+                // Right side buttons
+                Row(
+                  children: [
+                    // Back to Dashboard Button
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.white.withOpacity(0.05),
+                        foregroundColor: Colors.white,
+                        side: BorderSide(
+                          color: Colors.white.withOpacity(0.1),
+                          width: 1,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 12,
                         ),
                       ),
-                      const SizedBox(width: 12),
-                      CircleAvatar(
-                        backgroundColor: const Color(0xFF00D9C0),
-                        radius: 20,
-                        child: const Text(
-                          'JD',
+                      child: const Row(
+                        children: [
+                          Icon(Icons.arrow_back, size: 16),
+                          SizedBox(width: 8),
+                          Text('Dashboard'),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(width: 20),
+
+                    // User Avatar
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: const BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [Color(0xFF00FF88), Color(0xFF00D4FF)],
+                        ),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Center(
+                        child: Text(
+                          'ES',
                           style: TextStyle(
                             color: Colors.black,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
                       ),
-                    ],
-                  ),
-                ],
-              ),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
 
