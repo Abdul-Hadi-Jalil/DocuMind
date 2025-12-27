@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -20,6 +21,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             floating: true,
             expandedHeight: 80,
             collapsedHeight: 70,
+            // ignore: deprecated_member_use
             backgroundColor: const Color(0xFF1A1A1A).withOpacity(0.95),
             surfaceTintColor: Colors.transparent,
             flexibleSpace: LayoutBuilder(
@@ -30,6 +32,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   decoration: BoxDecoration(
                     border: Border(
                       bottom: BorderSide(
+                        // ignore: deprecated_member_use
                         color: const Color(0xFF00FF88).withOpacity(0.2),
                       ),
                     ),
@@ -84,7 +87,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 GestureDetector(
                                   onTap: () {
                                     // TODO: Open user profile
-                                    print('User profile tapped');
                                   },
                                   child: Container(
                                     decoration: BoxDecoration(
@@ -92,6 +94,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                       border: Border.all(
                                         color: const Color(
                                           0xFF00FF88,
+                                          // ignore: deprecated_member_use
                                         ).withOpacity(0.2),
                                       ),
                                       color: Colors.transparent,
@@ -150,10 +153,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 // Logout Button
                                 ElevatedButton(
                                   onPressed: () {
-                                    // TODO: Implement logout logic
-                                    print('Logout pressed');
+                                    FirebaseAuth.instance.signOut();
                                   },
                                   style: ElevatedButton.styleFrom(
+                                    // ignore: deprecated_member_use
                                     backgroundColor: Colors.white.withOpacity(
                                       0.05,
                                     ),

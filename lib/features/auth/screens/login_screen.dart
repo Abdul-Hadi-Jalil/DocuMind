@@ -1,4 +1,5 @@
 import 'package:documind/features/auth/screens/signup_screen.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class LoginPage extends StatefulWidget {
@@ -13,17 +14,19 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController _passwordController = TextEditingController();
   bool _isPasswordVisible = false;
 
+  Future<void> login() async {
+    await FirebaseAuth.instance.signInWithEmailAndPassword(
+      email: _emailController.text,
+      password: _passwordController.text,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.black,
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFF0A0A0A), Color(0xFF1A1A1A)],
-          ),
-        ),
+        decoration: const BoxDecoration(),
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),
           child: Center(
@@ -143,9 +146,6 @@ class _LoginPageState extends State<LoginPage> {
                               contentPadding: const EdgeInsets.all(16),
                             ),
                             keyboardType: TextInputType.emailAddress,
-                            onChanged: (value) {
-                              // TODO: Implement email validation if needed
-                            },
                           ),
                         ],
                       ),
@@ -211,9 +211,6 @@ class _LoginPageState extends State<LoginPage> {
                                 },
                               ),
                             ),
-                            onChanged: (value) {
-                              // TODO: Implement password validation if needed
-                            },
                           ),
                         ],
                       ),
@@ -228,7 +225,6 @@ class _LoginPageState extends State<LoginPage> {
                           GestureDetector(
                             onTap: () {
                               // TODO: Implement forgot password flow
-                              print('Forgot password tapped');
                             },
                             child: const Text(
                               'Forgot Password?',
@@ -249,14 +245,13 @@ class _LoginPageState extends State<LoginPage> {
                         width: double.infinity,
                         child: ElevatedButton(
                           onPressed: () {
-                            // TODO: Implement login logic
-                            // ignore: avoid_print
-                            print('Login pressed');
-                            // ignore: avoid_print
-                            print('Email: ${_emailController.text}');
-                            // ignore: avoid_print
-                            print('Password: ${_passwordController.text}');
-                            // ignore: avoid_print
+                            login();
+
+                            Navigator.pushNamedAndRemoveUntil(
+                              context,
+                              '/',
+                              (route) => false,
+                            );
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.transparent,
@@ -305,7 +300,7 @@ class _LoginPageState extends State<LoginPage> {
                               fontSize: 15,
                             ),
                           ),
-                          GestureDetector(
+                          InkWell(
                             onTap: () {
                               Navigator.push(
                                 context,

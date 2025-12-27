@@ -1,3 +1,7 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:documind/features/auth/screens/login_screen.dart';
+import 'package:documind/features/dashboard/screens/dashboard_screen.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class SignUpPage extends StatefulWidget {
@@ -17,6 +21,32 @@ class _SignUpPageState extends State<SignUpPage> {
   bool _agreeToTerms = false;
   bool _isPasswordVisible = false;
   bool _isConfirmPasswordVisible = false;
+  bool signInSuccess = false;
+
+  Future<void> signUp() async {
+    try {
+      // creating new user with email and password
+      await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: _emailController.text,
+        password: _passwordController.text,
+      );
+
+      await Future.delayed(Duration(milliseconds: 500));
+
+      // adding additional information of user to firestore database
+      await FirebaseFirestore.instance.collection("User").add({
+        "First Name": _firstNameController.text,
+        "Last Name": _lastNameController.text,
+        "Email": _emailController.text,
+      });
+
+      signInSuccess = true;
+    }
+    // ignore: empty_catches
+    catch (e) {
+      signInSuccess = false;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -43,13 +73,16 @@ class _SignUpPageState extends State<SignUpPage> {
                   constraints: const BoxConstraints(maxWidth: 450),
                   padding: const EdgeInsets.all(32.0),
                   decoration: BoxDecoration(
+                    // ignore: deprecated_member_use
                     color: const Color(0xFF1A1A1A).withOpacity(0.95),
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
+                      // ignore: deprecated_member_use
                       color: const Color(0xFF00FF88).withOpacity(0.2),
                     ),
                     boxShadow: [
                       BoxShadow(
+                        // ignore: deprecated_member_use
                         color: Colors.black.withOpacity(0.5),
                         blurRadius: 60,
                         offset: const Offset(0, 20),
@@ -133,7 +166,7 @@ class _SignUpPageState extends State<SignUpPage> {
                                   child: _buildTextField(
                                     label: 'First Name',
                                     controller: _firstNameController,
-                                    hintText: 'John',
+                                    hintText: 'Eshmal',
                                     keyboardType: TextInputType.name,
                                   ),
                                 ),
@@ -142,7 +175,7 @@ class _SignUpPageState extends State<SignUpPage> {
                                   child: _buildTextField(
                                     label: 'Last Name',
                                     controller: _lastNameController,
-                                    hintText: 'Doe',
+                                    hintText: 'Syeda',
                                     keyboardType: TextInputType.name,
                                   ),
                                 ),
@@ -205,25 +238,23 @@ class _SignUpPageState extends State<SignUpPage> {
                                 _agreeToTerms = value ?? false;
                               });
                             },
-                            fillColor: MaterialStateProperty.resolveWith<Color>(
-                              (Set<MaterialState> states) {
-                                if (states.contains(MaterialState.selected)) {
-                                  return const Color(0xFF00FF88);
-                                }
-                                return Colors.transparent;
-                              },
-                            ),
+                            fillColor: WidgetStateProperty.resolveWith<Color>((
+                              Set<WidgetState> states,
+                            ) {
+                              if (states.contains(WidgetState.selected)) {
+                                return const Color(0xFF00FF88);
+                              }
+                              return Colors.transparent;
+                            }),
                             checkColor: Colors.black,
                             side: BorderSide(
+                              // ignore: deprecated_member_use
                               color: Colors.white.withOpacity(0.3),
                             ),
                           ),
                           Expanded(
                             child: GestureDetector(
-                              onTap: () {
-                                // TODO: Show terms and conditions
-                                print('Show terms and conditions');
-                              },
+                              onTap: () {},
                               child: const Text(
                                 'I agree to the Terms & Conditions',
                                 style: TextStyle(
@@ -243,16 +274,15 @@ class _SignUpPageState extends State<SignUpPage> {
                         width: double.infinity,
                         child: ElevatedButton(
                           onPressed: () {
-                            // TODO: Implement signup logic
-                            print('Sign Up pressed');
-                            print('First Name: ${_firstNameController.text}');
-                            print('Last Name: ${_lastNameController.text}');
-                            print('Email: ${_emailController.text}');
-                            print('Password: ${_passwordController.text}');
-                            print(
-                              'Confirm Password: ${_confirmPasswordController.text}',
-                            );
-                            print('Agree to Terms: $_agreeToTerms');
+                            signUp();
+
+                            if (signInSuccess) {
+                              Navigator.pushNamedAndRemoveUntil(
+                                context,
+                                "/",
+                                (route) => false,
+                              );
+                            }
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.transparent,
@@ -301,10 +331,14 @@ class _SignUpPageState extends State<SignUpPage> {
                               fontSize: 15,
                             ),
                           ),
-                          GestureDetector(
+                          InkWell(
                             onTap: () {
-                              // TODO: Implement navigation to login page
-                              print('Navigate to login');
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => LoginPage(),
+                                ),
+                              );
                             },
                             child: const Text(
                               'Login',
@@ -350,13 +384,16 @@ class _SignUpPageState extends State<SignUpPage> {
             hintText: hintText,
             hintStyle: const TextStyle(color: Color(0xFF666666)),
             filled: true,
+            // ignore: deprecated_member_use
             fillColor: Colors.white.withOpacity(0.05),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
+              // ignore: deprecated_member_use
               borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
+              // ignore: deprecated_member_use
               borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
             ),
             focusedBorder: OutlineInputBorder(
@@ -395,13 +432,16 @@ class _SignUpPageState extends State<SignUpPage> {
             hintText: hintText,
             hintStyle: const TextStyle(color: Color(0xFF666666)),
             filled: true,
+            // ignore: deprecated_member_use
             fillColor: Colors.white.withOpacity(0.05),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
+              // ignore: deprecated_member_use
               borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
+              // ignore: deprecated_member_use
               borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
             ),
             focusedBorder: OutlineInputBorder(

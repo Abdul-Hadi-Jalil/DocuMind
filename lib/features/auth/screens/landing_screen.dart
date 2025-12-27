@@ -1,3 +1,4 @@
+import 'package:documind/features/auth/screens/login_screen.dart';
 import 'package:flutter/material.dart';
 
 class LandingScreen extends StatefulWidget {
@@ -36,7 +37,9 @@ class _LandingScreenState extends State<LandingScreen> {
             expandedHeight: 80,
             collapsedHeight: 70,
             backgroundColor: _isScrolled
+                // ignore: deprecated_member_use
                 ? const Color(0xFF000000).withOpacity(0.95)
+                // ignore: deprecated_member_use
                 : const Color(0xFF000000).withOpacity(0.85),
             surfaceTintColor: Colors.transparent,
             flexibleSpace: FlexibleSpaceBar(
@@ -63,23 +66,13 @@ class _LandingScreenState extends State<LandingScreen> {
                       ),
                     ),
 
-                    // Desktop Navigation Links
-                    if (MediaQuery.of(context).size.width > 768)
-                      Row(
-                        children: [
-                          _buildNavLink('Features'),
-                          const SizedBox(width: 32),
-                          _buildNavLink('Stats'),
-                          const SizedBox(width: 32),
-                          _buildNavLink('Get Started'),
-                        ],
-                      ),
-
                     // Sign In Button
                     ElevatedButton(
                       onPressed: () {
-                        // TODO: Implement sign in navigation
-                        print('Sign In pressed');
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => LoginPage()),
+                        );
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.transparent,
@@ -100,6 +93,7 @@ class _LandingScreenState extends State<LandingScreen> {
                           borderRadius: BorderRadius.circular(50),
                           boxShadow: [
                             BoxShadow(
+                              // ignore: deprecated_member_use
                               color: const Color(0xFF00FF88).withOpacity(0.4),
                               blurRadius: 20,
                               offset: const Offset(0, 5),
@@ -152,6 +146,7 @@ class _LandingScreenState extends State<LandingScreen> {
                         shape: BoxShape.circle,
                         gradient: RadialGradient(
                           colors: [
+                            // ignore: deprecated_member_use
                             const Color(0xFF00FF88).withOpacity(0.2),
                             Colors.transparent,
                           ],
@@ -214,8 +209,12 @@ class _LandingScreenState extends State<LandingScreen> {
                           // Get Started Button
                           ElevatedButton(
                             onPressed: () {
-                              // TODO: Implement get started navigation
-                              print('Get Started pressed');
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => LoginPage(),
+                                ),
+                              );
                             },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.transparent,
@@ -241,6 +240,7 @@ class _LandingScreenState extends State<LandingScreen> {
                                   BoxShadow(
                                     color: const Color(
                                       0xFF00FF88,
+                                      // ignore: deprecated_member_use
                                     ).withOpacity(0.4),
                                     blurRadius: 30,
                                     offset: const Offset(0, 10),
@@ -378,17 +378,10 @@ class _LandingScreenState extends State<LandingScreen> {
                             final feature = features[index];
 
                             return MouseRegion(
-                              onEnter: (_) => setState(() {
-                                // TODO: Add hover animation state
-                              }),
-                              onExit: (_) => setState(() {
-                                // TODO: Remove hover animation state
-                              }),
+                              onEnter: (_) => setState(() {}),
+                              onExit: (_) => setState(() {}),
                               child: GestureDetector(
-                                onTap: () {
-                                  // TODO: Implement feature navigation
-                                  print('${feature['title']} tapped');
-                                },
+                                onTap: () {},
                                 child: Container(
                                   decoration: BoxDecoration(
                                     gradient: LinearGradient(
@@ -397,9 +390,11 @@ class _LandingScreenState extends State<LandingScreen> {
                                       colors: [
                                         const Color(
                                           0xFF1A1A1A,
+                                          // ignore: deprecated_member_use
                                         ).withOpacity(0.8),
                                         const Color(
                                           0xFF0A0A0A,
+                                          // ignore: deprecated_member_use
                                         ).withOpacity(0.8),
                                       ],
                                     ),
@@ -407,11 +402,13 @@ class _LandingScreenState extends State<LandingScreen> {
                                     border: Border.all(
                                       color: const Color(
                                         0xFF00FF88,
+                                        // ignore: deprecated_member_use
                                       ).withOpacity(0.2),
                                       width: 1,
                                     ),
                                     boxShadow: [
                                       BoxShadow(
+                                        // ignore: deprecated_member_use
                                         color: Colors.black.withOpacity(0.3),
                                         blurRadius: 20,
                                         offset: const Offset(0, 10),
@@ -440,7 +437,8 @@ class _LandingScreenState extends State<LandingScreen> {
                                               BoxShadow(
                                                 color:
                                                     (feature['color2'] as Color)
-                                                        .withOpacity(0.4),
+                                                    // ignore: deprecated_member_use
+                                                    .withOpacity(0.4),
                                                 blurRadius: 20,
                                                 offset: const Offset(0, 5),
                                               ),
@@ -508,21 +506,6 @@ class _LandingScreenState extends State<LandingScreen> {
                 ),
                 child: Column(
                   children: [
-                    // Footer Links
-                    Wrap(
-                      spacing: 32,
-                      runSpacing: 16,
-                      alignment: WrapAlignment.center,
-                      children: [
-                        _buildFooterLink('Privacy Policy'),
-                        _buildFooterLink('Terms of Service'),
-                        _buildFooterLink('Contact'),
-                        _buildFooterLink('Documentation'),
-                      ],
-                    ),
-
-                    const SizedBox(height: 32),
-
                     // Copyright
                     const Text(
                       '© 2024 AI Suite. All rights reserved.',
@@ -534,50 +517,6 @@ class _LandingScreenState extends State<LandingScreen> {
             ),
           ),
         ],
-      ),
-
-      // Mobile Navigation Drawer Button
-      floatingActionButton: MediaQuery.of(context).size.width < 768
-          ? FloatingActionButton(
-              onPressed: () {
-                // TODO: Open mobile navigation drawer
-                print('Open mobile menu');
-              },
-              backgroundColor: const Color(0xFF00FF88),
-              child: const Icon(Icons.menu, color: Colors.black),
-            )
-          : null,
-    );
-  }
-
-  // Helper method for navigation links
-  Widget _buildNavLink(String text) {
-    return InkWell(
-      onTap: () {
-        // TODO: Implement scroll to section
-        print('$text clicked');
-      },
-      child: Text(
-        text,
-        style: const TextStyle(
-          color: Colors.white,
-          fontSize: 16,
-          fontWeight: FontWeight.w500,
-        ),
-      ),
-    );
-  }
-
-  // Helper method for footer links
-  Widget _buildFooterLink(String text) {
-    return InkWell(
-      onTap: () {
-        // TODO: Implement footer link navigation
-        print('$text clicked');
-      },
-      child: Text(
-        text,
-        style: const TextStyle(color: Color(0xFF00FF88), fontSize: 14),
       ),
     );
   }

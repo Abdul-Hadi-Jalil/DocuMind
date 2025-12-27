@@ -1,5 +1,4 @@
 import 'package:documind/features/auth/screens/landing_screen.dart';
-import 'package:documind/features/auth/screens/login_screen.dart';
 import 'package:documind/features/dashboard/screens/dashboard_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
