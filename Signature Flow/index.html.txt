@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Signature Flow</title>
+  <style>
+    :root{
+      --bg:#070A14;
+      --bg2:#0B1030;
+      --panel: rgba(255,255,255,.06);
+      --panel2: rgba(255,255,255,.08);
+      --border: rgba(255,255,255,.12);
+
+      --text:#F4F6FF;
+      --muted: rgba(244,246,255,.68);
+
+      --gold:#F6C56B;
+      --gold2:#E7A84A;
+      --cyan:#67E8F9;
+
+      --shadow: 0 30px 70px rgba(0,0,0,.55);
+      --shadow2: 0 18px 45px rgba(0,0,0,.35);
+
+      --r20: 20px;
+      --r16: 16px;
+      --r14: 14px;
+    }
+
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      color: var(--text);
+      background:
+        radial-gradient(1200px 700px at 12% 8%, rgba(103,232,249,.12), transparent 60%),
+        radial-gradient(900px 600px at 80% 18%, rgba(246,197,107,.14), transparent 55%),
+        radial-gradient(900px 600px at 60% 100%, rgba(122,167,255,.10), transparent 60%),
+        linear-gradient(180deg, var(--bg), var(--bg2));
+      min-height:100vh;
+    }
+
+    .wrap{
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 34px 18px 64px;
+    }
+
+    /* Top bar */
+    .topbar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:14px;
+      flex-wrap:wrap;
+      margin-bottom: 18px;
+    }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:12px;
+    }
+    .mark{
+      width:44px;
+      height:44px;
+      border-radius: 16px;
+      background:
+        radial-gradient(18px 18px at 30% 30%, rgba(255,255,255,.35), transparent 60%),
+        linear-gradient(135deg, var(--gold), var(--cyan));
+      box-shadow: var(--shadow2);
+    }
+    .brand h1{
+      font-size: 22px;
+      margin:0;
+      letter-spacing:.2px;
+    }
+    .brand .sub{
+      margin: 2px 0 0;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .status{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      padding:10px 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.12);
+      box-shadow: var(--shadow2);
+      font-size: 12px;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+    .pulse{
+      width:10px;height:10px;border-radius:999px;
+      background: var(--gold);
+      box-shadow: 0 0 0 6px rgba(246,197,107,.12);
+    }
+
+    /* Hero */
+    .hero{
+      display:grid;
+      grid-template-columns: 1.1fr .9fr;
+      gap: 16px;
+      align-items:stretch;
+      margin-bottom: 14px;
+    }
+
+    @media (max-width: 980px){
+      .hero{ grid-template-columns: 1fr; }
+    }
+
+    .heroLeft{
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--r20);
+      box-shadow: var(--shadow);
+      padding: 18px;
+      backdrop-filter: blur(10px);
+      position:relative;
+      overflow:hidden;
+    }
+
+    .heroLeft:before{
+      content:"";
+      position:absolute;
+      inset:-120px -160px auto auto;
+      width: 280px;
+      height: 280px;
+      background: radial-gradient(circle at 30% 30%, rgba(246,197,107,.25), transparent 62%);
+      transform: rotate(18deg);
+      pointer-events:none;
+    }
+
+    .kicker{
+      display:inline-flex;
+      gap:10px;
+      align-items:center;
+      padding:7px 10px;
+      border-radius: 999px;
+      background: rgba(246,197,107,.12);
+      border: 1px solid rgba(246,197,107,.22);
+      color: rgba(246,197,107,.92);
+      font-weight: 800;
+      font-size: 12px;
+      letter-spacing:.25px;
+    }
+
+    .title{
+      margin: 12px 0 8px;
+      font-size: 34px;
+      line-height: 1.08;
+      letter-spacing: .1px;
+    }
+
+    .desc{
+      margin: 0 0 14px;
+      color: var(--muted);
+      line-height: 1.6;
+      max-width: 64ch;
+      font-size: 14px;
+    }
+
+    .chips{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      margin-top: 10px;
+    }
+    .chip{
+      padding:8px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.10);
+      color: rgba(244,246,255,.82);
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .chip b{ color: var(--gold); }
+
+    /* Form card */
+    .heroRight{
+      background: rgba(255,255,255,.05);
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: var(--r20);
+      box-shadow: var(--shadow);
+      padding: 18px;
+      backdrop-filter: blur(10px);
+    }
+
+    .formTitle{
+      margin:0 0 10px;
+      font-size: 14px;
+      color: rgba(244,246,255,.86);
+      font-weight: 900;
+      letter-spacing:.2px;
+    }
+
+    form{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+
+    label{
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 800;
+      letter-spacing:.2px;
+    }
+
+    .inputRow{
+      display:flex;
+      gap:10px;
+      align-items:center;
+    }
+
+    input[type="text"]{
+      flex:1;
+      padding: 12px 14px;
+      border-radius: var(--r14);
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(7,10,20,.55);
+      color: var(--text);
+      outline:none;
+      font-size: 15px;
+    }
+    input::placeholder{ color: rgba(244,246,255,.45); }
+
+    .btn{
+      padding: 12px 14px;
+      border-radius: var(--r14);
+      border: 1px solid rgba(246,197,107,.28);
+      background: linear-gradient(135deg, rgba(246,197,107,1), rgba(231,168,74,1));
+      color: #141019;
+      font-weight: 950;
+      cursor:pointer;
+      transition: transform .08s ease, filter .2s ease;
+      white-space:nowrap;
+      box-shadow: 0 12px 26px rgba(246,197,107,.12);
+    }
+    .btn:hover{ filter: brightness(1.03); }
+    .btn:active{ transform: translateY(1px); }
+
+    .infoRow{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .badgeMini{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:7px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.10);
+    }
+
+    .tagDot{
+      width:8px; height:8px; border-radius:999px;
+      background: var(--cyan);
+      box-shadow: 0 0 0 5px rgba(103,232,249,.10);
+    }
+    .modeText{
+      color: rgba(244,246,255,.90);
+      font-weight: 900;
+    }
+
+    /* Results */
+    .results{
+      margin-top: 14px;
+      background: rgba(255,255,255,.05);
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: var(--r20);
+      box-shadow: var(--shadow);
+      padding: 16px;
+      backdrop-filter: blur(10px);
+    }
+
+    .resultsHead{
+      display:flex;
+      align-items:flex-end;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-bottom: 12px;
+    }
+
+    .resultsHead h2{
+      margin:0;
+      font-size: 16px;
+      letter-spacing:.2px;
+    }
+    .resultsHead .hint{
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+    @media (max-width: 980px){
+      .grid{ grid-template-columns: 1fr; }
+    }
+
+    .sigCard{
+      border-radius: var(--r20);
+      overflow:hidden;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(7,10,20,.45);
+      box-shadow: 0 12px 28px rgba(0,0,0,.30);
+    }
+
+    .paper{
+      padding: 14px;
+      background:
+        radial-gradient(700px 180px at 30% 10%, rgba(0,0,0,.10), transparent 60%),
+        linear-gradient(0deg, rgba(255,255,255,.10), rgba(255,255,255,.10)),
+        #f4f5fb;
+      min-height: 210px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+
+    .paper img{
+      width: 100%;
+      max-width: 440px;
+      background:#000;
+      border-radius: 16px;
+      padding: 10px;
+      box-shadow: 0 18px 30px rgba(0,0,0,.18);
+    }
+
+    .sigFooter{
+      padding: 12px 14px 14px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+    }
+
+    .sigFooter .left .t{
+      font-weight: 950;
+      font-size: 13px;
+      margin:0;
+    }
+    .sigFooter .left .s{
+      margin-top:4px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .dl{
+      text-decoration:none;
+      font-weight: 950;
+      font-size: 12px;
+      padding: 9px 11px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+      color: var(--text);
+    }
+    .dl:hover{ filter: brightness(1.06); }
+
+    footer{
+      margin-top: 14px;
+      color: rgba(244,246,255,.55);
+      font-size: 12px;
+      line-height: 1.55;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+
+    <div class="topbar">
+      <div class="brand">
+        <div class="mark"></div>
+        <div>
+          <h1>Signature Flow</h1>
+          <div class="sub">Realistic signing behavior (underline • dot • flourish • shortening)</div>
+        </div>
+      </div>
+      <div class="status">
+        <span class="pulse"></span>
+        <span>CPU-friendly • Hybrid generator</span>
+      </div>
+    </div>
+
+    <div class="hero">
+      <div class="heroLeft">
+        <div class="kicker">Advisor-ready output</div>
+        <div class="title">Generate signatures that look signed — not typed.</div>
+        <p class="desc">
+          Signature Flow produces 3 signature samples for a given name.
+          For known names, it shows real dataset signatures. For new names, it simulates human signing habits:
+          abbreviated text, dominant initial, stroke pressure, flourish loops, and underline + dot.
+        </p>
+
+        <div class="chips">
+          <div class="chip"><b>Shortening</b> like real signing</div>
+          <div class="chip"><b>Flourish</b> loops</div>
+          <div class="chip"><b>Underline</b> integrated stroke</div>
+          <div class="chip"><b>Dot</b> ending mark</div>
+          <div class="chip">No GPU required</div>
+        </div>
+      </div>
+
+      <div class="heroRight">
+        <div class="formTitle">Generate samples</div>
+
+        <form method="POST" autocomplete="off">
+          <div>
+            <label for="name">Name</label>
+            <div class="inputRow">
+              <input id="name" name="name" type="text"
+                     placeholder="Try: Abdullah (dataset) / John (procedural)"
+                     value="{{ name }}" required />
+              <button class="btn" type="submit">Generate</button>
+            </div>
+
+            <div class="infoRow">
+              <span class="badgeMini"><span class="tagDot"></span>3 samples • PNG • 128×128</span>
+              {% if mode %}
+                <span class="badgeMini">Mode: <span class="modeText">{{ mode }}</span></span>
+              {% endif %}
+              <span class="badgeMini">Download each sample</span>
+            </div>
+          </div>
+        </form>
+
+        <footer>
+          Tip: If your advisor says “it’s just fonts”, show that procedural mode includes
+          <b>shortened signing</b>, <b>underline</b>, <b>dot</b>, and <b>flourish loops</b>.
+        </footer>
+      </div>
+    </div>
+
+    {% if images %}
+      <div class="results">
+        <div class="resultsHead">
+          <h2>Generated signature samples</h2>
+          <div class="hint">Click Generate again to get new variations</div>
+        </div>
+
+        <div class="grid">
+          {% for img_url in images %}
+            <div class="sigCard">
+              <div class="paper">
+                <img src="{{ img_url }}?v={{ cache_bust }}-{{ loop.index }}" alt="signature {{ loop.index }}" />
+              </div>
+              <div class="sigFooter">
+                <div class="left">
+                  <p class="t">Sample {{ loop.index }}</p>
+                  <div class="s">Underline + dot + flourish</div>
+                </div>
+                <a class="dl" href="{{ img_url }}" download>Download</a>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    {% endif %}
+
+  </div>
+</body>
+</html>

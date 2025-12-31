@@ -1,0 +1,29 @@
+import time
+from flask import Flask, render_template, request
+from signature_logic import get_three_signatures, save_outputs
+
+app = Flask(__name__)
+
+@app.route("/", methods=["GET", "POST"])
+def index():
+    images = []
+    name = ""
+    mode = None
+    cache_bust = int(time.time())
+
+    if request.method == "POST":
+        name = request.form.get("name", "").strip()
+        result = get_three_signatures(name)
+        mode = result.get("mode")
+        images = save_outputs(result)
+
+    return render_template(
+        "index.html",
+        images=images,
+        name=name,
+        mode=mode,
+        cache_bust=cache_bust
+    )
+
+if __name__ == "__main__":
+    app.run(debug=True)

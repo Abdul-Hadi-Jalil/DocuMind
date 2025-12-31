@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <title>Froggy AI • SignatureFlow</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    :root{
+      --green:#00ffb3;
+      --green-soft:#00cfa0;
+      --bg:#050707;
+      --panel:rgba(255,255,255,.05);
+      --line:rgba(255,255,255,.12);
+      --text:#eafff8;
+      --muted:rgba(255,255,255,.6);
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:'Inter',sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(900px 600px at 80% 5%, rgba(0,255,179,.18), transparent 60%),
+        radial-gradient(700px 500px at 10% 20%, rgba(0,207,160,.12), transparent 60%),
+        var(--bg);
+      overflow-x:hidden;
+    }
+
+    /* Cursor glow */
+    #cursor-glow{
+      position:fixed;
+      width:180px;height:180px;
+      background:radial-gradient(circle, rgba(0,255,179,.22), transparent 60%);
+      pointer-events:none;
+      transform:translate(-50%,-50%);
+      z-index:0;
+    }
+
+    .wrap{max-width:1200px;margin:auto;padding:28px;position:relative;z-index:1}
+
+    .nav{
+      display:flex;justify-content:space-between;align-items:center;
+      padding:18px 24px;border-radius:26px;
+      background:var(--panel);border:1px solid var(--line);
+      backdrop-filter:blur(10px);
+    }
+    .brand{
+      display:flex;align-items:center;gap:12px;
+      font-family:'Space Grotesk',sans-serif;
+      font-weight:800;font-size:20px;color:var(--green);
+    }
+    .frog{
+      width:40px;height:40px;border-radius:50%;
+      background:radial-gradient(circle at top,#00ffb3,#008f6a);
+      display:grid;place-items:center;
+      box-shadow:0 0 25px rgba(0,255,179,.7);
+      font-size:20px;
+    }
+
+    .btn{
+      padding:10px 18px;border-radius:999px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.06);
+      color:var(--text);cursor:pointer;
+      transition:.25s;
+    }
+    .btn:hover{
+      transform:translateY(-2px);
+      box-shadow:0 0 25px rgba(0,255,179,.32);
+      border-color: rgba(0,255,179,.35);
+    }
+    .btn-accent{
+      border:none;
+      background:linear-gradient(90deg,var(--green),var(--green-soft));
+      color:#002b1f;font-weight:800;
+      animation:pulse 2.8s infinite;
+    }
+    @keyframes pulse{
+      0%{box-shadow:0 0 10px rgba(0,255,179,.35)}
+      50%{box-shadow:0 0 28px rgba(0,255,179,.75)}
+      100%{box-shadow:0 0 10px rgba(0,255,179,.35)}
+    }
+
+    /* HEADER split */
+    .header{
+      margin-top:26px;
+      padding:22px;
+      border-radius:22px;
+      background:var(--panel);
+      border:1px solid var(--line);
+      display:grid;
+      grid-template-columns: 1.25fr 0.75fr;
+      gap: 16px;
+      position:relative;
+      overflow:hidden;
+    }
+    .header:before{
+      content:"";
+      position:absolute; inset:-120px -120px auto auto;
+      width:320px;height:320px;border-radius:50%;
+      background: radial-gradient(circle, rgba(0,255,179,.20), transparent 60%);
+      filter: blur(2px);
+      animation: floatGlow 4.5s ease-in-out infinite;
+      pointer-events:none;
+    }
+    @keyframes floatGlow{
+      0%{ transform: translate(0,0) scale(1); opacity:.75; }
+      50%{ transform: translate(-18px,16px) scale(1.05); opacity:1; }
+      100%{ transform: translate(0,0) scale(1); opacity:.75; }
+    }
+    @media(max-width: 980px){
+      .header{ grid-template-columns: 1fr; }
+    }
+
+    .header h1{
+      margin:0;
+      font-size:40px;
+      font-family:'Space Grotesk',sans-serif;
+      letter-spacing:.2px;
+    }
+    .header p{margin:10px 0 0;color:var(--muted);max-width:720px}
+
+    .mini-grid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      align-content:start;
+      z-index:1;
+    }
+    .mini{
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(0,0,0,.18);
+      border-radius:16px;
+      padding:12px;
+      transition:.25s;
+    }
+    .mini:hover{
+      transform: translateY(-2px);
+      box-shadow: 0 0 18px rgba(0,255,179,.22);
+      border-color: rgba(0,255,179,.25);
+    }
+    .mini .k{font-size:12px;color:var(--muted);margin-bottom:6px}
+    .mini .v{font-size:16px;font-weight:800}
+    .badge{
+      display:inline-block;
+      padding:3px 10px;
+      border-radius:999px;
+      border:1px solid rgba(0,255,179,.35);
+      background:rgba(0,255,179,.12);
+      color:var(--green);
+      font-size:12px;
+      font-weight:800;
+      margin-left:8px;
+    }
+    .links{
+      grid-column: 1 / -1;
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:2px;
+    }
+    .link-pill{
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(255,255,255,.04);
+      padding:8px 12px;
+      border-radius:999px;
+      color:var(--muted);
+      font-size:12px;
+      text-decoration:none;
+      transition:.25s;
+    }
+    .link-pill:hover{
+      color:var(--text);
+      border-color: rgba(0,255,179,.28);
+      box-shadow: 0 0 18px rgba(0,255,179,.18);
+      transform: translateY(-1px);
+    }
+
+    /* Main Grid */
+    .grid{margin-top:20px;display:grid;grid-template-columns:1.3fr .7fr;gap:18px}
+    @media(max-width:900px){.grid{grid-template-columns:1fr}}
+
+    .panel{
+      padding:20px;border-radius:22px;
+      background:var(--panel);border:1px solid var(--line);
+      transition:.25s;
+    }
+    .panel:hover{
+      transform:translateY(-3px);
+      box-shadow:0 0 26px rgba(0,255,179,.18);
+    }
+
+    input,select{
+      padding:14px;border-radius:16px;
+      border:1px solid var(--line);
+      background:rgba(0,0,0,.35);
+      color:var(--text);
+    }
+    .form-row{display:flex;gap:12px;flex-wrap:wrap}
+
+    .cards{
+      margin-top:18px;
+      display:grid;grid-template-columns:repeat(3,1fr);gap:14px;
+    }
+    @media(max-width:700px){.cards{grid-template-columns:1fr}}
+
+    .card{
+      border-radius:18px;
+      background:rgba(255,255,255,.05);
+      border:1px solid var(--line);
+      padding:14px;
+      transition:.25s;
+    }
+    .card:hover{
+      transform:translateY(-5px);
+      box-shadow:0 0 26px rgba(0,255,179,.25);
+      border-color: rgba(0,255,179,.25);
+    }
+
+    .sig{width:100%;background:#fff;border-radius:14px}
+    .small{margin-top:8px;font-size:13px;color:var(--muted)}
+
+    /* Mini meter under each card */
+    .meter-wrap{
+      margin-top:10px;
+      border-radius:999px;
+      background:rgba(0,0,0,.28);
+      border:1px solid rgba(0,255,179,.18);
+      overflow:hidden;
+      height:12px;
+      position:relative;
+    }
+    .meter-fill{
+      height:100%;
+      width:0%;
+      background:linear-gradient(90deg, rgba(0,255,179,0.95), rgba(0,207,160,0.95));
+      box-shadow:0 0 18px rgba(0,255,179,.35);
+      transition: width 1.2s ease;
+    }
+    .meter-label{
+      margin-top:6px;
+      display:flex;
+      justify-content:space-between;
+      font-size:12px;
+      color:var(--muted);
+    }
+    .meter-label b{color:rgba(0,255,179,.9)}
+
+    /* Charts */
+    canvas{
+      background:rgba(0,0,0,.25);
+      border-radius:16px;
+      border:1px solid rgba(0,255,179,.14);
+      padding:10px;
+    }
+
+    /* Stepper */
+    .stepper{
+      margin-top: 10px;
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(0,0,0,.16);
+      border-radius:16px;
+      padding:12px;
+    }
+    .step{
+      display:flex; gap:10px; align-items:flex-start;
+      padding:8px 0;
+      border-bottom:1px dashed rgba(255,255,255,.08);
+    }
+    .step:last-child{border-bottom:none}
+    .dot{
+      width:10px;height:10px;border-radius:50%;
+      background:rgba(0,255,179,.95);
+      box-shadow:0 0 12px rgba(0,255,179,.6);
+      margin-top:4px;
+      flex:0 0 auto;
+    }
+    .step .t{font-size:13px;font-weight:800}
+    .step .d{font-size:12px;color:var(--muted);margin-top:2px}
+
+    /* Donut layout */
+    .donut-row{
+      display:grid;
+      grid-template-columns: 0.9fr 1.1fr;
+      gap: 12px;
+      align-items:center;
+      margin-bottom: 12px;
+    }
+    @media(max-width:900px){
+      .donut-row{grid-template-columns:1fr}
+    }
+    .donut-box{
+      position:relative;
+      min-height:220px;
+    }
+    .donut-center{
+      position:absolute;
+      inset:0;
+      display:grid;
+      place-items:center;
+      pointer-events:none;
+      text-align:center;
+    }
+    .donut-center .big{
+      font-size:28px;
+      font-weight:900;
+      color:var(--green);
+      font-family:'Space Grotesk', sans-serif;
+    }
+    .donut-center .cap{
+      margin-top:6px;
+      font-size:12px;
+      color:var(--muted);
+    }
+  </style>
+</head>
+
+<body>
+<div id="cursor-glow"></div>
+
+<div class="wrap">
+  <div class="nav">
+    <div class="brand">
+      <div class="frog">🐸</div>
+      Froggy AI
+    </div>
+    <button class="btn">Dashboard</button>
+  </div>
+
+  <div class="header">
+    <div style="z-index:1">
+      <h1>Signature<span style="color:var(--green)">Flow</span></h1>
+      <p>Generate three signature variants (Dataset/Procedural/Hybrid) and evaluate match scores using a CNN model.</p>
+
+      <div class="stepper">
+        <div class="step">
+          <div class="dot"></div>
+          <div>
+            <div class="t">Input</div>
+            <div class="d">Enter a name and choose generation mode.</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="dot"></div>
+          <div>
+            <div class="t">Generate</div>
+            <div class="d">Create 3 signature samples and save to output folder.</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="dot"></div>
+          <div>
+            <div class="t">Evaluate</div>
+            <div class="d">CNN predicts signer + match score for each signature.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mini-grid">
+      <div class="mini">
+        <div class="k">Mode</div>
+        <div class="v">{{ mode or 'hybrid' }}</div>
+      </div>
+      <div class="mini">
+        <div class="k">Model</div>
+        <div class="v">
+          {% if predictions and predictions|length > 0 %}
+            Loaded <span class="badge">CNN</span>
+          {% else %}
+            Not Loaded
+          {% endif %}
+        </div>
+      </div>
+      <div class="mini">
+        <div class="k">Outputs</div>
+        <div class="v">
+          {% if images %}3 saved{% else %}—{% endif %}
+        </div>
+      </div>
+      <div class="mini">
+        <div class="k">Storage</div>
+        <div class="v">static/output</div>
+      </div>
+
+      <div class="links">
+        <a class="link-pill" href="#" onclick="alert('Log file is: static/output/generation_log.csv'); return false;">View Log Path</a>
+        <a class="link-pill" href="#" onclick="alert('Images are saved in: static/output/'); return false;">View Output Path</a>
+        <a class="link-pill" href="#" onclick="window.scrollTo({top: document.body.scrollHeight, behavior:'smooth'}); return false;">Go to Charts</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid">
+    <!-- LEFT -->
+    <div class="panel">
+      <h3>Generate Signatures</h3>
+      {% if images %}
+      <div class="small" style="margin-bottom:12px;color:var(--green);font-weight:600;">3 outputs • saved in static/output</div>
+      {% endif %}
+      <form method="POST">
+        <div class="form-row">
+          <input type="text" name="name" placeholder="Enter name" value="{{ name or '' }}" required>
+          <select name="mode">
+            <option value="hybrid" {% if mode=='hybrid' %}selected{% endif %}>Hybrid (Dataset → Fallback)</option>
+            <option value="dataset" {% if mode=='dataset' %}selected{% endif %}>Dataset</option>
+            <option value="procedural" {% if mode=='procedural' %}selected{% endif %}>Procedural</option>
+          </select>
+          <button class="btn btn-accent" type="submit">Generate 3 Signatures</button>
+        </div>
+      </form>
+
+      {% if images %}
+      <div class="cards">
+        {% for img in images %}
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+            <h4 style="margin:0;font-size:14px;font-weight:800;">Signature {{ loop.index }}</h4>
+            <a href="{{ img }}" download class="btn" style="padding:6px 12px;font-size:12px;">Output</a>
+          </div>
+          <img src="{{ img }}" class="sig" alt="signature">
+          <div class="small">
+            CNN: {{ predictions[loop.index0] if predictions and loop.index0 < predictions|length else 'Not evaluated' }}
+          </div>
+
+          <!-- Mini meter -->
+          <div class="meter-wrap">
+            <div class="meter-fill" id="meterFill{{ loop.index0 }}"></div>
+          </div>
+          <div class="meter-label">
+            <span><b>Match</b> <span id="meterPct{{ loop.index0 }}">0%</span></span>
+            <span id="meterTag{{ loop.index0 }}">—</span>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+        <div class="small">Tip: Use Hybrid for best demo: dataset if available, otherwise procedural fallback.</div>
+        <div class="small" style="margin-top:8px;">Logging: generation details saved in static/output/generation_log.csv</div>
+      {% endif %}
+    </div>
+
+    <!-- RIGHT -->
+    <div class="panel">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px;">
+        <h3 style="margin:0;">CNN Evaluation</h3>
+        <div class="small" style="margin:0;color:var(--muted);">Confidence chart</div>
+      </div>
+
+      <script id="preds-data" type="application/json">
+        {{ (predictions or []) | tojson }}
+      </script>
+
+      <!-- Information fields -->
+      <div style="margin-bottom:16px;display:grid;gap:10px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:rgba(0,0,0,.2);border-radius:12px;border:1px solid var(--line);">
+          <span style="font-size:12px;color:var(--muted);">Selected Mode:</span>
+          <span style="font-weight:800;color:var(--text);">{{ mode or 'hybrid' }}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:rgba(0,0,0,.2);border-radius:12px;border:1px solid var(--line);">
+          <span style="font-size:12px;color:var(--muted);">Input Name:</span>
+          <span style="font-weight:800;color:var(--text);">{{ name or '—' }}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:rgba(0,0,0,.2);border-radius:12px;border:1px solid var(--line);">
+          <span style="font-size:12px;color:var(--muted);">Model Status:</span>
+          <span style="font-weight:800;color:var(--text);display:flex;align-items:center;gap:6px;">
+            {% if predictions and predictions|length > 0 %}
+              Loaded <span style="width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 8px rgba(0,255,179,.6);display:inline-block;"></span>
+            {% else %}
+              Not Loaded
+            {% endif %}
+          </span>
+        </div>
+      </div>
+
+      <div class="donut-row">
+        <div class="donut-box">
+          <canvas id="donutChart" height="220"></canvas>
+          <div class="donut-center">
+            <div>
+              <div class="big" id="avgPct">0%</div>
+              <div class="cap">Average match</div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="small" style="margin-top:0">
+            <b>How to read:</b> Donut shows average match score (0–100%). Bars show per-signature match confidence.
+          </div>
+          <div class="small">
+            <b>Note:</b> If CNN is not loaded, values remain 0.
+          </div>
+        </div>
+      </div>
+
+      <canvas id="confChart" height="230"></canvas>
+      <div class="small">Animated bars show match confidence extracted from CNN output.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Cursor glow
+  const glow = document.getElementById("cursor-glow");
+  document.addEventListener("mousemove", e => {
+    glow.style.left = e.clientX + "px";
+    glow.style.top  = e.clientY + "px";
+  });
+
+  // Parse predictions and extract confidences (supports " ... (0.87)" anywhere in string)
+  const preds = JSON.parse(document.getElementById("preds-data").textContent || "[]");
+
+  const confs = [0,0,0];
+  for (let i = 0; i < Math.min(preds.length, 3); i++){
+    const m = String(preds[i]).match(/\((0\.\d+|1(?:\.0+)?)\)/);
+    confs[i] = m ? Number(m[1]) : 0;
+  }
+
+  // --- Mini meters under cards ---
+  for (let i = 0; i < 3; i++){
+    const pct = Math.round(confs[i] * 100);
+    const fill = document.getElementById("meterFill" + i);
+    const pctEl = document.getElementById("meterPct" + i);
+    const tagEl = document.getElementById("meterTag" + i);
+
+    if (fill) {
+      // small delay to animate fill after render
+      setTimeout(() => { fill.style.width = pct + "%"; }, 120);
+    }
+    if (pctEl) pctEl.textContent = pct + "%";
+    if (tagEl) {
+      if (pct >= 80) tagEl.textContent = "Strong";
+      else if (pct >= 60) tagEl.textContent = "Good";
+      else if (pct >= 40) tagEl.textContent = "Weak";
+      else tagEl.textContent = "Low";
+    }
+  }
+
+  // --- Average for donut ---
+  const avg = confs.reduce((a,b)=>a+b,0) / 3;
+  const avgPct = Math.round(avg * 100);
+  document.getElementById("avgPct").textContent = avgPct + "%";
+
+  // Chart green styling helpers
+  function greenGradient(ctx){
+    const g = ctx.createLinearGradient(0, 0, 0, 220);
+    g.addColorStop(0, "rgba(0,255,179,0.92)");
+    g.addColorStop(1, "rgba(0,207,160,0.55)");
+    return g;
+  }
+
+  // --- Donut chart ---
+  const donutCtx = document.getElementById("donutChart").getContext("2d");
+  new Chart(donutCtx, {
+    type: "doughnut",
+    data: {
+      labels: ["Match", "Remaining"],
+      datasets: [{
+        data: [avg, Math.max(0, 1-avg)],
+        backgroundColor: ["rgba(0,255,179,0.92)", "rgba(255,255,255,0.07)"],
+        borderColor: ["rgba(0,255,179,0.35)", "rgba(255,255,255,0.00)"],
+        borderWidth: 1,
+        hoverOffset: 4
+      }]
+    },
+    options: {
+      cutout: "72%",
+      plugins: { legend: { display: false } },
+      animation: {
+        duration: 1200,
+        easing: "easeOutQuart"
+      }
+    }
+  });
+
+  // --- Animated bar chart ---
+  const barCanvas = document.getElementById("confChart");
+  const barCtx = barCanvas.getContext("2d");
+  const grad = greenGradient(barCtx);
+
+  new Chart(barCtx, {
+    type: "bar",
+    data: {
+      labels: ["Sig 1", "Sig 2", "Sig 3"],
+      datasets: [{
+        label: "Match Score",
+        data: confs,
+        backgroundColor: [grad, grad, grad],
+        borderColor: "rgba(0,255,179,0.95)",
+        borderWidth: 1,
+        borderRadius: 10
+      }]
+    },
+    options: {
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: (ctx) => ` Match: ${(ctx.raw*100).toFixed(1)}%`
+          }
+        }
+      },
+      animation: {
+        duration: 1400,
+        easing: "easeOutQuart"
+      },
+      scales: {
+        x: {
+          ticks: { color: "rgba(0,255,179,0.78)" },
+          grid: { color: "rgba(0,255,179,0.10)" }
+        },
+        y: {
+          min: 0, max: 1,
+          ticks: {
+            color: "rgba(0,255,179,0.78)",
+            callback: (v) => (v*100) + "%"
+          },
+          grid: { color: "rgba(0,255,179,0.10)" }
+        }
+      }
+    }
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,372 @@
+import os
+import random
+import numpy as np
+import cv2
+import pandas as pd
+from PIL import Image, ImageDraw, ImageFont
+
+
+# -----------------------------
+# PATHS / SETUP
+# -----------------------------
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+DATASET_ROOT = os.path.join(BASE_DIR, "assets", "signature_dataset")
+LABELS_PATH = os.path.join(DATASET_ROOT, "labels.csv")
+
+FONTS_DIR = os.path.join(BASE_DIR, "assets", "fonts")
+
+OUTPUT_DIR = os.path.join(BASE_DIR, "static", "output")
+os.makedirs(OUTPUT_DIR, exist_ok=True)
+
+
+# -----------------------------
+# LOAD LABELS (DATASET MODE)
+# -----------------------------
+labels = pd.read_csv(LABELS_PATH)
+KNOWN_NAMES = set(labels["name"].unique())
+
+
+# -----------------------------
+# LOAD FONTS
+# -----------------------------
+def load_fonts():
+    fonts = []
+    if os.path.isdir(FONTS_DIR):
+        for fn in os.listdir(FONTS_DIR):
+            if fn.lower().endswith(".ttf"):
+                fonts.append(os.path.join(FONTS_DIR, fn))
+
+    # Prefer signature-like fonts; Bebas won't match these keywords so it won't be preferred
+    good_keywords = ["dancing", "pacifico", "sekuya", "bartle"]
+    preferred = [f for f in fonts if any(k in f.lower() for k in good_keywords)]
+    return preferred if preferred else fonts
+
+
+FONT_PATHS = load_fonts()
+
+
+# -----------------------------
+# DATASET RETRIEVAL
+# -----------------------------
+def pick_real_samples(name: str, k: int = 3):
+    subset = labels[labels["name"].str.lower() == name.lower()]
+    if len(subset) == 0:
+        return []
+
+    picks = subset.sample(min(k, len(subset)), replace=False)
+
+    paths = []
+    for fn in picks["filename"].tolist():
+        # fn is like "images/img_00000.png"
+        paths.append(os.path.join(DATASET_ROOT, fn))
+    return paths
+
+
+# -----------------------------
+# SIGNATURE-LIKE TEXT FORMS (shortening / abbreviation)
+# -----------------------------
+def signature_text_forms(name: str):
+    """
+    3 signature-like variations:
+    - truncated (Abdu)
+    - initial + short body (Abd)
+    - initial with dot (A.)
+    """
+    name = (name or "").strip()
+    if not name:
+        return ["", "", ""]
+
+    parts = name.split()
+    first = parts[0]
+
+    if len(first) <= 2:
+        return [first, first, first]
+
+    body_len = random.randint(2, min(5, len(first) - 1))
+    body = first[1 : 1 + body_len]
+
+    v1 = first[: random.randint(3, min(7, len(first)))]
+    v2 = first[0] + body
+    v3 = first[0] + "."
+
+    forms = []
+    for v in [v1, v2, v3]:
+        v = v.strip()
+        if v and v not in forms:
+            forms.append(v)
+
+    while len(forms) < 3:
+        forms.append(forms[0])
+    return forms[:3]
+
+
+# -----------------------------
+# RENDER (AUTO-SCALE FOR LONG NAMES)
+# -----------------------------
+def render_name(text, font_path, size=150, canvas=(820, 280)):
+    """
+    Render signature text with auto-scaling so longer names fit inside the canvas.
+    Black background + white ink.
+    """
+    img = Image.new("L", canvas, 0)
+    draw = ImageDraw.Draw(img)
+
+    # fallback: if font missing
+    if not font_path or not os.path.exists(font_path):
+        font = ImageFont.load_default()
+        draw.text((30, 80), text, fill=255, font=font)
+        return np.array(img)
+
+    # shrink font until it fits target box
+    target_max_w = int(canvas[0] * 0.72)  # allow text to take ~72% width
+    target_max_h = int(canvas[1] * 0.55)  # allow text to take ~55% height
+
+    s = size
+    w = h = 0
+    font = None
+
+    for _ in range(12):
+        font = ImageFont.truetype(font_path, s)
+        bbox = draw.textbbox((0, 0), text, font=font)
+        w = bbox[2] - bbox[0]
+        h = bbox[3] - bbox[1]
+        if w <= target_max_w and h <= target_max_h:
+            break
+        s = max(70, s - 10)
+
+    x = 30  # keep left margin (room for flourish on left is handled by flourish function)
+    y = max(20, (canvas[1] - h) // 2)
+    draw.text((x, y), text, fill=255, font=font)
+    return np.array(img)
+
+
+# -----------------------------
+# EFFECTS
+# -----------------------------
+def emphasize_initial(img):
+    """Thicken left-most region to mimic dominant initial."""
+    ys, xs = np.where(img > 10)
+    if len(xs) == 0:
+        return img
+
+    x0, x1 = xs.min(), xs.max()
+    mid = x0 + int(0.25 * (x1 - x0))
+
+    out = img.copy()
+    kernel = np.ones((3, 3), np.uint8)
+    out[:, :mid] = cv2.dilate(out[:, :mid], kernel, iterations=1)
+    return out
+
+
+def random_affine(img):
+    h, w = img.shape
+    shear = np.random.uniform(-0.22, 0.12)
+    tx = np.random.uniform(-18, 18)
+    ty = np.random.uniform(-12, 12)
+    M = np.float32([[1, shear, tx],
+                    [0, 1,     ty]])
+    return cv2.warpAffine(img, M, (w, h), borderValue=0)
+
+
+def baseline_wobble(img, strength=6):
+    """Wobble baseline to simulate handwriting flow."""
+    h, w = img.shape
+    out = np.zeros_like(img)
+    freq = np.random.uniform(4, 10)
+    phase = np.random.uniform(0, 2 * np.pi)
+    shifts = (np.sin(np.linspace(0, freq, w) + phase) * strength).astype(np.int32)
+    for x in range(w):
+        out[:, x] = np.roll(img[:, x], shifts[x])
+    return out
+
+
+def pressure_effect(img):
+    """Mimic pen pressure by thickening or thinning strokes slightly."""
+    k = np.random.choice([1, 2, 2, 3])
+    kernel = np.ones((k, k), np.uint8)
+    out = img.copy()
+    if np.random.rand() < 0.55:
+        out = cv2.dilate(out, kernel, iterations=1)
+    else:
+        out = cv2.erode(out, kernel, iterations=1)
+    return out
+
+
+def loop_flourish(img):
+    """Add oval/loop flourish like real signatures."""
+    h, w = img.shape
+    ys, xs = np.where(img > 10)
+    if len(xs) == 0:
+        return img
+
+    cx = xs.min() - random.randint(10, 30)
+    cy = int(np.mean(ys)) + random.randint(-8, 8)
+    r = random.randint(22, 55)
+
+    out = img.copy()
+    ry = int(r * random.uniform(0.55, 0.85))
+    rx = r
+
+    for t in np.linspace(0, 2 * np.pi * random.uniform(1.1, 1.6), 160):
+        x = int(cx + rx * np.cos(t))
+        y = int(cy + ry * np.sin(t))
+        if 0 <= x < w and 0 <= y < h:
+            out[y, x] = 255
+            if random.random() < 0.08 and 0 <= y + 1 < h:
+                out[y + 1, x] = 255
+    return out
+
+
+def signature_underline(img):
+    """Curved underline + end dot (matches your advisor samples)."""
+    h, w = img.shape
+    ys, xs = np.where(img > 10)
+    if len(xs) == 0:
+        return img
+
+    x0, x1 = xs.min(), xs.max()
+    y1 = ys.max()
+
+    out = img.copy()
+    start_y = min(h - 8, y1 + random.randint(10, 18))
+    amp = random.uniform(1.5, 3.5)
+    thickness = random.choice([1, 2, 2])
+
+    ux0 = max(0, x0 - random.randint(10, 25))
+    ux1 = min(w - 1, x1 + random.randint(20, 60))
+
+    for x in range(ux0, ux1):
+        y = int(start_y + amp * np.sin((x - ux0) / 28))
+        if 0 <= y < h:
+            out[y:y + thickness, x] = 255
+
+    dot_x = min(w - 6, ux1 - random.randint(5, 15))
+    dot_y = min(h - 6, start_y + random.randint(8, 16))
+    cv2.circle(out, (dot_x, dot_y), random.randint(2, 4), 255, -1)
+
+    return out
+
+
+# -----------------------------
+# FINISH (FIX OVER-ZOOM FOR LONG NAMES)
+# -----------------------------
+def finish_to_128(img):
+    """
+    Instead of tightly cropping then resizing (which can over-zoom),
+    we:
+      1) crop with generous padding
+      2) resize to fit inside 128x128 with margins (aspect preserved)
+      3) center on a 128x128 black canvas
+    """
+    ys, xs = np.where(img > 10)
+    if len(xs) > 0:
+        x0, x1 = xs.min(), xs.max()
+        y0, y1 = ys.min(), ys.max()
+
+        pad_x = 55
+        pad_y = 45
+        x0, x1 = max(0, x0 - pad_x), min(img.shape[1], x1 + pad_x)
+        y0, y1 = max(0, y0 - pad_y), min(img.shape[0], y1 + pad_y)
+
+        crop = img[y0:y1, x0:x1]
+
+        # If extremely wide, shrink width slightly before fitting (prevents huge zoom)
+        ch, cw = crop.shape
+        if cw > 2.2 * ch:
+            scale_w = (2.2 * ch) / cw
+            new_w = max(1, int(cw * scale_w))
+            crop = cv2.resize(crop, (new_w, ch), interpolation=cv2.INTER_AREA)
+            ch, cw = crop.shape
+
+        # Fit crop into 128 with margins
+        out = np.zeros((128, 128), dtype=np.uint8)
+        scale = min(120 / cw, 120 / ch)  # keep ~4px margin each side minimum
+        rw = max(1, int(cw * scale))
+        rh = max(1, int(ch * scale))
+
+        crop_resized = cv2.resize(crop, (rw, rh), interpolation=cv2.INTER_AREA)
+
+        x_start = (128 - rw) // 2
+        y_start = (128 - rh) // 2
+        out[y_start:y_start + rh, x_start:x_start + rw] = crop_resized
+        img = out
+    else:
+        img = cv2.resize(img, (128, 128), interpolation=cv2.INTER_AREA)
+
+    # ink feel
+    if np.random.rand() < 0.65:
+        img = cv2.GaussianBlur(img, (3, 3), 0)
+    img = cv2.addWeighted(img, 1.25, cv2.GaussianBlur(img, (0, 0), 1.0), -0.25, 0)
+    return img
+
+
+# -----------------------------
+# PROCEDURAL GENERATION
+# -----------------------------
+def generate_3_procedural(name):
+    texts = signature_text_forms(name)
+    outs = []
+
+    font_list = FONT_PATHS if FONT_PATHS else [None]
+
+    for t in texts:
+        fp = random.choice(font_list)
+
+        img = render_name(t, fp)
+        img = emphasize_initial(img)
+
+        img = random_affine(img)
+        img = baseline_wobble(img, strength=float(random.uniform(2, 6)))
+        img = pressure_effect(img)
+
+        if random.random() < 0.75:
+            img = loop_flourish(img)
+
+        img = signature_underline(img)
+        img = finish_to_128(img)
+
+        outs.append(img)
+
+    return outs
+
+
+# -----------------------------
+# MAIN PIPELINE
+# -----------------------------
+def get_three_signatures(name):
+    name = (name or "").strip()
+    if not name:
+        return {"mode": "empty", "images": []}
+
+    if name.lower() in [n.lower() for n in KNOWN_NAMES]:
+        return {"mode": "dataset", "paths": pick_real_samples(name, 3)}
+
+    return {"mode": "procedural", "images": generate_3_procedural(name)}
+
+
+def save_outputs(result):
+    """Write output images to static/output and return their URLs."""
+    for fn in os.listdir(OUTPUT_DIR):
+        if fn.endswith(".png"):
+            try:
+                os.remove(os.path.join(OUTPUT_DIR, fn))
+            except:
+                pass
+
+    out_urls = []
+
+    if result["mode"] == "dataset":
+        for i, path in enumerate(result["paths"]):
+            img = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
+            out_path = os.path.join(OUTPUT_DIR, f"sig_{i+1}.png")
+            cv2.imwrite(out_path, img)
+            out_urls.append(f"/static/output/sig_{i+1}.png")
+
+    elif result["mode"] == "procedural":
+        for i, img in enumerate(result["images"]):
+            out_path = os.path.join(OUTPUT_DIR, f"sig_{i+1}.png")
+            cv2.imwrite(out_path, img)
+            out_urls.append(f"/static/output/sig_{i+1}.png")
+
+    return out_urls
