@@ -4,6 +4,12 @@ A Flutter AI workspace prototype with document chat, OCR, image-generation scree
 
 The repository demonstrates a modular client integrating document selection, a Gemini chat flow, and HTTP-based AI tools. Some required backend services live outside this checkout.
 
+## Interface preview
+
+The responsive landing experience introduces the platform's document intelligence, image generation, OCR, and signature workflows in a unified AI workspace.
+
+![DocuMind AI landing interface](docs/images/documind-landing.png)
+
 ## Stack and architecture
 
 Flutter / Dart `^3.9.2`, Firebase Authentication and related Firebase SDKs, `google_generative_ai`, `file_picker`, `http`, and `flutter_dotenv` form the app. The bundled signature experiment uses Flask, Pillow/OpenCV, TensorFlow/Keras, NumPy, and pandas.
